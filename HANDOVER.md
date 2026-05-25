@@ -17,33 +17,34 @@ An interactive web app for **late-deafened adult ESL learners** to learn ASL sig
 
 ---
 
-## Current state (as of 2026-05-25 — Session 4 starting in this chat)
+## Current state (as of 2026-05-25 — end of Session 4)
 
-Repo is clean (`git status` empty), sitting on the Session 3 commit:
+Repo is clean. Session 4's three build tasks are done and committed:
 
 ```
 git log --oneline -5
+3356d7f Session 4 (Task 1): Gemini scene image as context backdrop
+193be32 Session 4 (Tasks 2-3): x deselect button + fingerspelling strip; merge handover
 548cf0b Session 3: unified single-screen layout, in-context card, story linter; Session 4 brief
 9ab6cb9 commend on first stage handover. Discuss how to handle the data to assist narration, and the layout.
 01ff35c build the MVP
-d0c4f2e Claude first draft
-1227c7a Initial commit
 ```
 
 ### Built and working
 
 | File | Purpose | Status |
 |---|---|---|
-| `index.html` | Unified single-screen layout (scene banner + story left, info/video right) — NO tabs | ✅ Done |
-| `style.css` | Swiss-minimal, 2-column grid, scene banner, in-context highlight, responsive stack | ✅ Done |
-| `app.js` | vocabularyMap, stories, sentenceIndex, shared click handler, video fallback chain | ✅ Done |
+| `index.html` | Single-screen layout: image banner + story (left), info/video/fingerspell panel (right) — NO tabs | ✅ Done |
+| `style.css` | Swiss-minimal, 2-column grid, image banner, fingerspell tiles, × dismiss, responsive stack | ✅ Done |
+| `app.js` | vocabularyMap, stories (with `image`), renderScene, shared click handler, fingerspell, video fallback chain | ✅ Done |
+| `assets/image/home-kitchen.png` | Gemini-generated scene backdrop for the kitchen story (1376×768) | ✅ Present |
 | `wlasl-urls.js` | Auto-generated URL lookup, 14 words, ~9KB | ✅ Done |
 | `scripts/build-lookup.js` | Regenerates wlasl-urls.js from WLASL_v0.3.json | ✅ Done |
 | `scripts/lint-story.js` | Author-first helper: checks draft text against WLASL coverage | ✅ Done |
 | `WLASL_v0.3.json` | Full 2000-word dataset, local only, gitignored | ✅ Present |
 | `.gitignore` | Excludes WLASL JSON and .DS_Store | ✅ Done |
 
-**Asset state (relevant to Session 4):** `assets/svgs/` and `assets/videos/` are both **empty**. There is no scene image and no fingerspelling handshape images yet — Session 4 tasks 1 and 2 both start from zero assets.
+**Asset state:** `assets/image/home-kitchen.png` is in place (the kitchen scene backdrop). `assets/fingerspell/` exists with a README but **no handshape images yet** — the Fingerspell card currently shows letter glyphs and auto-upgrades to handshapes the moment `a.png … z.png` are dropped in. `assets/svgs/` and `assets/videos/` are still empty (spare/optional).
 
 ### Session 3 changes (decided WITH Echo)
 - **Layout merged.** Dropped the Explore/Read tabs. One screen: left column = scene banner above the story narration; right column = shared info/video panel. Clicking a scene object OR a story word both drive the same panel. (Chosen over 3-column because we didn't yet have one scene illustration per story.)
@@ -52,34 +53,28 @@ d0c4f2e Claude first draft
 
 ---
 
-## ▶ Active work — Session 4 (building now in this chat)
+## Session 4 — completed (2026-05-25)
 
-Three build tasks, decided WITH Echo 2026-05-25.
+All three tasks built, verified with a jsdom DOM test, and committed.
 
-### Task 1 — Bigger scene as a generated backdrop
-- One scene image per story. **Echo generates it in the Gemini app and drops the PNG into `assets/`** (decided — keeps the static GitHub Pages site free of API keys).
-- For v1 the image is a **context-only backdrop, NOT clickable** (a raster PNG has no object structure, so we avoid per-scene hotspot coordinate math). **Echo's note:** this is a plan to test — once we see how easy the generated image is to handle and how well it composes, we may revisit and add hotspots on the image in a later pass.
-- Clickable vocabulary stays in the **story prose** (blue underlined words = the clear affordance). This resolves Echo's "users won't find the trick" worry — there is no hidden trick.
-- Give the image much more space; tighten the story (render as a flowing paragraph, not one line per sentence) to kill excess whitespace.
-- With a per-story image now available, the **3-column layout (narration | image | video)** Echo originally wanted is back on the table — decide during this session (see decisions below).
+### ✅ Task 1 — Generated scene image as a context backdrop
+- The hand-built kitchen SVG is gone. `renderScene()` injects the per-story illustration (`story.image` → `assets/image/home-kitchen.png`) as a large, **non-clickable** banner. All vocabulary stays clickable in the story prose (no hidden trick).
+- Story now renders as **one flowing paragraph** (sentences joined), killing the per-sentence whitespace.
+- **Layout decision — kept 2-column, did NOT go 3-column.** The Gemini image is landscape (1376×768, ~1.79:1); it reads well as a wide top banner but would look cramped as a narrow middle column. 3-column (narration | image | video) stays deferred unless future scene images are cropped portrait/square. *(Echo's note carried forward: adding hotspots on the image is still a possible later test.)*
+- Image styling: `.scene-img` uses `object-fit: cover; height: clamp(220px, 40vh, 440px)` so the banner scales with the viewport without dominating.
 
-### Task 2 — Replace the "In context" card with a fingerspelling strip
-- "In context" is redundant (it echoes the sentence already on screen). Remove it.
-- New card: spell the clicked word in the **ASL manual alphabet** (A–Z handshape images). Additive — teaches fingerspelling, covers no-sign words / proper nouns, and is the on-ramp to the Phase 2 fingerspelling engine.
-- Need 26 openly-licensed handshape images. **v1 fallback** if sourcing is slow: show/link a single ASL-alphabet reference chart in that card; do per-word spelling as v2.
+### ✅ Task 2 — Fingerspelling strip replaces "In context"
+- "In context" card, `renderInContext`, and `sentenceIndex` removed.
+- New **Fingerspell** card: `renderFingerspell(word)` lays out one tile per letter. Each tile attempts `assets/fingerspell/{letter}.png`; on success (`onload`) the tile shows the handshape with the letter as a small caption, on failure (`onerror`) it falls back to the letter glyph. So it works now (v1, letters) and auto-upgrades to handshapes (v2) when 26 images are added — no code change needed.
 
-### Task 3 — Fix the "← Back" button
-- Leftover from the old tabbed design; meaningless in the single-screen layout.
-- Replace with a small **"×" to deselect** the current word (dismiss the panel back to idle).
+### ✅ Task 3 — "×" deselect replaces "← Back"
+- Dead bottom "← Back" button removed. A small round **×** sits top-right of the active panel (`#dismiss-btn`) and calls `resetPanel()` to return to idle.
 
-### Decisions to settle before / during coding
-1. **Image sourcing — RESOLVED:** Echo generates the scene image in Gemini and drops the PNG into `assets/`. No connector/API pipeline. (Hotspot-on-image is a possible *later* enhancement to test — see Task 1 note.)
-2. **3-column layout — open:** now that the story can have its own image, move to narration | image | video, or keep 2-column + banner?
-3. **Handshape images — open:** v1 fallback (single reference chart) vs. sourcing all 26 letters now.
-4. **Second story topic — open (carried over):** "At the Doctor" is strong for the accessibility/disability angle; "Going to School" is more neutral. Linter already validated an "At the Doctor…" draft (doctor/insurance/card/appointment coverable, "lobby" → fingerspell).
-
-### Suggested build order
-3 → 2 → 1 (smallest/safest first: the "×" button, then the fingerspelling card, then the larger layout + image change), committing after each. Task 1's layout/image work can land once Echo provides the first Gemini PNG.
+### Carried forward / still open
+- **Handshape images:** drop `a.png … z.png` into `assets/fingerspell/` to upgrade the strip. (Optional: a single ASL-alphabet reference chart as an even-lighter fallback — not built.)
+- **`cup` is an unused vocab entry:** it's in `vocabularyMap` but appears in no story text (and wasn't surfaced in the old SVG scene either), so it's currently never clickable. Either add it to a story sentence or drop it from the map.
+- **Second story topic:** "At the Doctor" (strong accessibility angle) vs. "Going to School". Linter already validated an "At the Doctor…" draft (doctor/insurance/card/appointment coverable, "lobby" → fingerspell). Each new story now also needs its own Gemini image in `assets/image/`.
+- **GitHub Pages deployment:** ready when Echo wants — `git push` + enable Pages, then add the URL to `ezhozhao.github.io`.
 
 ---
 
@@ -119,8 +114,10 @@ Three build tasks, decided WITH Echo 2026-05-25.
 - [x] Video fallback chain across multiple WLASL sources
 
 ### Phase 1 remaining
-- [ ] Session 4 tasks 1–3 (above)
-- [ ] Add 1–2 more stories. Workflow: draft narration as plain text → `node scripts/lint-story.js draft.txt` → add coverable words to `vocabularyMap` + the `stories` array (wrap in `{word}`) → add the same words to `VOCAB_WORDS` in `build-lookup.js` → run `node scripts/build-lookup.js`.
+- [x] Session 4 tasks 1–3 — scene image backdrop, fingerspell strip, × dismiss (done 2026-05-25)
+- [ ] Add handshape images `a.png … z.png` to `assets/fingerspell/` (upgrades the strip to real ASL handshapes)
+- [ ] Add 1–2 more stories (each now also needs its own Gemini image in `assets/image/`). Workflow: draft narration as plain text → `node scripts/lint-story.js draft.txt` → add coverable words to `vocabularyMap` + the `stories` array (wrap in `{word}`) → add the same words to `VOCAB_WORDS` in `build-lookup.js` → run `node scripts/build-lookup.js`.
+- [ ] Decide on `cup` — unused vocab entry (not in any story text); add it to a sentence or remove from `vocabularyMap`.
 - [ ] GitHub Pages deployment — one push, enable Pages, then add the URL to `ezhozhao.github.io`
 - [ ] Test video playback across all 14 words; note persistent failures
 - [ ] Add a loading spinner while video tries sources (replace "Loading…" text)
@@ -167,14 +164,16 @@ If a clicked word is NOT in WLASL, trigger a fingerspelling engine (CSS cross-fa
 asl-context-learning/
 ├── index.html              ← layout
 ├── style.css               ← all styling
-├── app.js                  ← all logic (vocabularyMap, stories, video)
+├── app.js                  ← all logic (vocabularyMap, stories+image, renderScene, fingerspell, video)
 ├── wlasl-urls.js           ← AUTO-GENERATED — run build-lookup.js, do not edit
 ├── WLASL_v0.3.json         ← local only, gitignored, never push to GitHub
 ├── HANDOVER.md             ← this file — update every session
 ├── .gitignore
 ├── assets/
-│   ├── videos/             ← local mp4 fallback (optional, empty for now)
-│   └── svgs/               ← spare folder (Gemini scene PNGs will land in assets/)
+│   ├── image/              ← per-story scene backdrops (home-kitchen.png)
+│   ├── fingerspell/        ← drop a.png … z.png here → tiles auto-upgrade to handshapes
+│   ├── videos/             ← local mp4 fallback (optional, empty)
+│   └── svgs/               ← spare folder (empty)
 └── scripts/
     ├── build-lookup.js     ← run after adding new words
     └── lint-story.js       ← run on a draft to see WLASL coverage (author-first)
@@ -185,6 +184,6 @@ asl-context-learning/
 ## Resolved in earlier sessions (kept for context)
 
 - ~~Process all WLASL words into stories~~ → **author-first.** Most of the 2000 glosses are function/abstract words; auto-stories read poorly. Write narration first, then `lint-story.js` reports coverage.
-- ~~Combine Explore + Read into one 3-column layout~~ → **merged to one screen, 2-column + scene banner.** 3-column deferred until every story has its own scene art — re-opened in Session 4 now that Gemini images are available.
-- ~~"Common phrases with" shows nothing~~ → **replaced with "In context."** (Itself being replaced by the fingerspelling strip in Session 4.)
-- ~~Scene art scaling~~ → **resolved into Session 4 Task 1:** one Gemini-generated image per story, non-clickable backdrop for v1, with hotspots as a possible later test.
+- ~~Combine Explore + Read into one 3-column layout~~ → **kept 2-column + scene banner (Session 4).** Landscape Gemini images suit a wide top banner; 3-column deferred unless future images are portrait/square.
+- ~~"Common phrases with" shows nothing~~ → replaced with "In context" (Session 3) → **replaced with the Fingerspell strip (Session 4).**
+- ~~Scene art scaling~~ → **resolved (Session 4):** one Gemini-generated image per story, non-clickable backdrop, sourced in the Gemini app and dropped into `assets/image/`. Hotspots remain a possible later test.
