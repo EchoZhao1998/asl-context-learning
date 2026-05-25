@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASL Context Learning</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <span class="logo">ASL Context Learning</span>
+    <span class="tagline">Built by a deaf learner, for deaf learners.</span>
+  </header>
+
+  <main>
+
+    <!-- LEFT: Interactive kitchen scene -->
+    <section class="scene-panel" id="scene-container">
+      <!-- Inline SVG kitchen will be injected here by app.js -->
+    </section>
+
+    <!-- RIGHT: Info sidebar -->
+    <aside class="info-panel" id="info-panel">
+      <div class="info-idle" id="info-idle">
+        <p>← Click any object in the scene to learn its ASL sign.</p>
+      </div>
+
+      <div class="info-active hidden" id="info-active">
+        <h2 id="word-title"></h2>
+
+        <div class="video-wrap">
+          <video id="asl-video" loop autoplay muted playsinline>
+            <source src="" type="video/mp4" />
+            <p class="video-fallback">Video not available yet. Download the WLASL clip and place it in <code>assets/videos/</code>.</p>
+          </video>
+          <p class="video-note" id="video-note"></p>
+        </div>
+
+        <div class="context-wrap">
+          <h3>Often described as</h3>
+          <p id="word-context">—</p>
+        </div>
+
+        <div class="context-wrap">
+          <h3>Common phrases with</h3>
+          <p id="word-phrases">—</p>
+        </div>
+
+        <button class="reset-btn" id="reset-btn">← Back to scene</button>
+      </div>
+    </aside>
+
+  </main>
+
+  <footer>
+    <span>ASL signs from <a href="https://www.kaggle.com/datasets/risangbaskoro/wlasl-processed" target="_blank">WLASL dataset</a> · Context words from <a href="https://www.datamuse.com/api/" target="_blank">Datamuse API</a></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
