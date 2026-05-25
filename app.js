@@ -34,6 +34,8 @@ const stories = [
     id: 'morning-kitchen',
     title: 'A Morning in the Kitchen',
     scene: 'Home · Kitchen',
+    image: 'assets/image/home-kitchen.png',
+    imageAlt: 'Illustrated kitchen: a wooden table holding a glass of water, sliced bread and a red apple, a chair beside it, and a sunlit window behind.',
     sentences: [
       'Every {morning}, I walk into the {kitchen}.',
       'I feel {hungry}, so I look for some {food}.',
@@ -58,22 +60,20 @@ const videoNote       = document.getElementById('video-note');
 const dismissBtn      = document.getElementById('dismiss-btn');
 
 // ── Init ──────────────────────────────────────────────────────
-sceneContainer.innerHTML = buildKitchenSVG();
+renderScene();
 renderStories();
-attachSceneListeners();
 resetPanel();
 dismissBtn.addEventListener('click', resetPanel);
 
-// ── Scene: SVG click listeners ───────────────────────────────
-function attachSceneListeners() {
-  document.querySelectorAll('.interactive-object').forEach(el => {
-    const word = el.dataset.word;
-    if (!word) return;
-    el.addEventListener('click',   () => handleWordClick(word, el));
-    el.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') handleWordClick(word, el);
-    });
-  });
+// ── Scene backdrop ───────────────────────────────────────────
+// A per-story illustration shown as a context-only banner. It is NOT
+// clickable by design — all vocabulary is clickable in the story prose
+// below, so there is no hidden interaction to discover.
+function renderScene() {
+  const story = stories[0];
+  if (!story || !story.image) { sceneContainer.style.display = 'none'; return; }
+  sceneContainer.innerHTML =
+    `<img class="scene-img" src="${story.image}" alt="${story.imageAlt || story.title}">`;
 }
 
 // ── Render stories ───────────────────────────────────────────
@@ -85,7 +85,7 @@ function renderStories() {
       </div>
       <h2 class="story-title">${story.title}</h2>
       <div class="story-body">
-        ${story.sentences.map(s => `<p class="story-sentence">${parseStory(s)}</p>`).join('\n')}
+        <p class="story-sentence">${story.sentences.map(s => parseStory(s)).join(' ')}</p>
       </div>
     </article>
   `).join('');
@@ -128,7 +128,7 @@ function renderFingerspell(word) {
 
 // ── Shared word click handler ─────────────────────────────────
 function handleWordClick(word, triggerEl) {
-  document.querySelectorAll('.interactive-object, .story-word').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.story-word').forEach(el => el.classList.remove('active'));
   if (triggerEl) triggerEl.classList.add('active');
 
   infoIdle.classList.add('hidden');
@@ -184,77 +184,5 @@ function resetPanel() {
   aslVideo.src     = '';
   aslVideo.onerror = null;
   videoNote.textContent = '';
-  document.querySelectorAll('.interactive-object, .story-word').forEach(el => el.classList.remove('active'));
-}
-
-// ── Kitchen SVG ───────────────────────────────────────────────
-function buildKitchenSVG() {
-  return `
-  <svg viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive kitchen scene">
-    <rect width="640" height="480" fill="#fafafa"/>
-    <rect x="0" y="340" width="640" height="140" fill="#ede8e0"/>
-    <rect x="0" y="0"   width="640" height="340" fill="#f5f2ee"/>
-
-    <!-- Window -->
-    <rect x="240" y="40" width="160" height="120" rx="4" fill="#d4eaf7" stroke="#c0c0c0" stroke-width="1.5"/>
-    <line x1="320" y1="40"  x2="320" y2="160" stroke="#c0c0c0" stroke-width="1.5"/>
-    <line x1="240" y1="100" x2="400" y2="100" stroke="#c0c0c0" stroke-width="1.5"/>
-
-    <!-- Counter -->
-    <rect x="0" y="250" width="640" height="16" fill="#c9b99a"/>
-    <rect x="0" y="266" width="640" height="70" fill="#d9cbb5"/>
-
-    <!-- Cabinets -->
-    <rect x="20"  y="180" width="80" height="68" rx="2" fill="#e8e0d5" stroke="#c9b99a" stroke-width="1"/>
-    <rect x="110" y="180" width="80" height="68" rx="2" fill="#e8e0d5" stroke="#c9b99a" stroke-width="1"/>
-    <circle cx="96"  cy="214" r="3" fill="#a89070"/>
-    <circle cx="186" cy="214" r="3" fill="#a89070"/>
-
-    <!-- Sink -->
-    <rect x="420" y="220" width="120" height="28" rx="3" fill="#b0bec5" stroke="#90a4ae" stroke-width="1"/>
-    <ellipse cx="480" cy="234" rx="40" ry="10" fill="#90a4ae"/>
-    <rect x="476" y="200" width="8"   height="22" rx="3" fill="#90a4ae"/>
-
-    <!-- TABLE -->
-    <g id="obj-table" class="interactive-object" data-word="table" role="button" tabindex="0" aria-label="table">
-      <rect x="170" y="340" width="300" height="14" rx="3" fill="#b5946a"/>
-      <rect x="185" y="354" width="12" height="80" rx="2" fill="#a07850"/>
-      <rect x="443" y="354" width="12" height="80" rx="2" fill="#a07850"/>
-      <rect x="220" y="354" width="10" height="65" rx="2" fill="#a07850"/>
-      <rect x="410" y="354" width="10" height="65" rx="2" fill="#a07850"/>
-    </g>
-    <text class="obj-label" x="320" y="338" text-anchor="middle">table</text>
-
-    <!-- CHAIR -->
-    <g id="obj-chair" class="interactive-object" data-word="chair" role="button" tabindex="0" aria-label="chair">
-      <rect x="60"  y="345" width="90" height="10" rx="2" fill="#8b6f47"/>
-      <rect x="62"  y="295" width="86" height="52" rx="3" fill="#9e7d54" opacity="0.9"/>
-      <rect x="65"  y="355" width="8"  height="55" rx="2" fill="#7a5c35"/>
-      <rect x="137" y="355" width="8"  height="55" rx="2" fill="#7a5c35"/>
-    </g>
-    <text class="obj-label" x="105" y="290" text-anchor="middle">chair</text>
-
-    <!-- APPLE -->
-    <g id="obj-apple" class="interactive-object" data-word="apple" role="button" tabindex="0" aria-label="apple">
-      <ellipse cx="340" cy="328" rx="22" ry="24" fill="#e05555"/>
-      <ellipse cx="330" cy="318" rx="7"  ry="5"  fill="#f08080" opacity="0.5"/>
-      <rect    x="338"  y="303"  width="4" height="10" rx="2" fill="#5a3a1a"/>
-      <ellipse cx="348" cy="307" rx="8"  ry="4"  fill="#5a9a3a" transform="rotate(-20 348 307)"/>
-    </g>
-    <text class="obj-label" x="340" y="298" text-anchor="middle">apple</text>
-
-    <!-- GLASS -->
-    <g id="obj-glass" class="interactive-object" data-word="glass" role="button" tabindex="0" aria-label="glass">
-      <path d="M390 295 L398 340 H420 L428 295 Z" fill="#d4eaf7" stroke="#90c4e7" stroke-width="1.2"/>
-      <path d="M393 320 L398 340 H420 L425 320 Z" fill="#a8d4f0" opacity="0.6"/>
-    </g>
-    <text class="obj-label" x="409" y="290" text-anchor="middle">glass</text>
-
-    <!-- KNIFE -->
-    <g id="obj-knife" class="interactive-object" data-word="knife" role="button" tabindex="0" aria-label="knife">
-      <path d="M460 305 L510 318 L460 328 Z" fill="#c8c8c8" stroke="#a0a0a0" stroke-width="0.8"/>
-      <rect x="430" y="310" width="32" height="10" rx="4" fill="#6b4c2a"/>
-    </g>
-    <text class="obj-label" x="476" y="300" text-anchor="middle">knife</text>
-  </svg>`;
+  document.querySelectorAll('.story-word').forEach(el => el.classList.remove('active'));
 }

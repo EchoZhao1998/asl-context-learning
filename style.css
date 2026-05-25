@@ -72,46 +72,20 @@ main {
   flex-direction: column;
 }
 
-/* Scene banner — constrained-height interactive SVG */
+/* Scene banner — per-story illustration, context-only backdrop (non-clickable) */
 .scene-banner {
   position: relative;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px 24px;
   flex-shrink: 0;
 }
 
-.scene-banner svg {
+.scene-img {
+  display: block;
   width: 100%;
-  max-width: 560px;
-  height: auto;
-  max-height: 260px;
-}
-
-.interactive-object {
-  cursor: pointer;
-  transition: opacity 0.15s, filter 0.15s;
-}
-
-.interactive-object:hover {
-  opacity: 0.75;
-  filter: drop-shadow(0 0 6px var(--highlight));
-}
-
-.interactive-object.active {
-  filter: drop-shadow(0 0 10px var(--highlight));
-}
-
-.obj-label {
-  font-family: var(--font);
-  font-size: 11px;
-  fill: var(--muted);
-  pointer-events: none;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  height: clamp(220px, 40vh, 440px);
+  object-fit: cover;
+  object-position: center 42%;
 }
 
 /* ── Story narration ───────────────────────────────────────── */
