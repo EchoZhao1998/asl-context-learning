@@ -205,12 +205,45 @@ main {
   padding: 0 8px;
 }
 
-.info-active h2 {
+.info-active-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.info-active-head h2 {
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  margin-bottom: 20px;
   text-transform: uppercase;
+  line-height: 1.1;
+}
+
+/* ── Dismiss (×) button ─────────────────────────────────────── */
+.dismiss-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  line-height: 1;
+  font-size: 1.4rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.dismiss-btn:hover,
+.dismiss-btn:focus {
+  border-color: var(--accent);
+  color: var(--accent);
+  outline: none;
 }
 
 /* ── Video ─────────────────────────────────────────────────── */
@@ -260,37 +293,59 @@ main {
   font-size: 0.88rem;
 }
 
-/* In-context sentence: highlight the active word */
-#word-incontext {
-  line-height: 1.7;
-  color: var(--text);
+/* ── Fingerspell strip ─────────────────────────────────────── */
+.fingerspell-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
 }
 
-#word-incontext .ctx-word {
-  background: rgba(78, 134, 255, 0.18);
-  color: var(--accent);
-  font-weight: 600;
-  border-radius: 3px;
-  padding: 0 3px;
-}
-
-/* ── Reset button ──────────────────────────────────────────── */
-.reset-btn {
-  margin-top: auto;
-  padding: 10px 0;
-  background: none;
+.fs-tile {
+  position: relative;
+  width: 38px;
+  height: 46px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 0.8rem;
-  color: var(--muted);
-  width: 100%;
-  transition: border-color 0.15s, color 0.15s;
+  border-radius: 6px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--accent);
+  overflow: hidden;
 }
 
-.reset-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.fs-tile .fs-img {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+}
+
+/* When a handshape image loads, show it and shrink the letter to a caption */
+.fs-tile.has-img .fs-img { display: block; }
+.fs-tile.has-img .fs-letter {
+  position: absolute;
+  bottom: 1px;
+  right: 3px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.fs-space {
+  border: none;
+  background: none;
+  color: var(--muted);
+}
+
+.fingerspell-note {
+  font-size: 0.73rem;
+  color: var(--muted);
+  margin-top: 8px;
 }
 
 /* ── Footer ────────────────────────────────────────────────── */

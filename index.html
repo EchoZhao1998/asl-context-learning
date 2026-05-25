@@ -34,7 +34,10 @@
       </div>
 
       <div class="info-active hidden" id="info-active">
-        <h2 id="word-title"></h2>
+        <div class="info-active-head">
+          <h2 id="word-title"></h2>
+          <button class="dismiss-btn" id="dismiss-btn" aria-label="Deselect word" title="Deselect">&times;</button>
+        </div>
 
         <div class="video-wrap">
           <video id="asl-video" loop autoplay muted playsinline>
@@ -48,12 +51,11 @@
           <p id="word-context">—</p>
         </div>
 
-        <div class="context-wrap">
-          <h3>In context</h3>
-          <p id="word-incontext">—</p>
+        <div class="context-wrap fingerspell-wrap">
+          <h3>Fingerspell</h3>
+          <div class="fingerspell-strip" id="fingerspell-strip"></div>
+          <p class="fingerspell-note" id="fingerspell-note"></p>
         </div>
-
-        <button class="reset-btn" id="reset-btn">← Back</button>
       </div>
     </aside>
 

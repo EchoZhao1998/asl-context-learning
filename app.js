@@ -44,36 +44,25 @@ const stories = [
   },
 ];
 
-// ── word → first source sentence index (for "In context") ────
-// Maps a clickable word to the raw sentence string it first appears in.
-const sentenceIndex = {};
-stories.forEach(story => {
-  story.sentences.forEach(raw => {
-    const tokens = [...raw.matchAll(/\{(\w+)\}/g)].map(m => m[1]);
-    tokens.forEach(w => {
-      if (!(w in sentenceIndex)) sentenceIndex[w] = raw;
-    });
-  });
-});
-
 // ── DOM refs ─────────────────────────────────────────────────
-const sceneContainer = document.getElementById('scene-container');
-const storyContainer = document.getElementById('story-container');
-const infoIdle       = document.getElementById('info-idle');
-const infoActive     = document.getElementById('info-active');
-const wordTitle      = document.getElementById('word-title');
-const wordContext    = document.getElementById('word-context');
-const wordInContext  = document.getElementById('word-incontext');
-const aslVideo       = document.getElementById('asl-video');
-const videoNote      = document.getElementById('video-note');
-const resetBtn       = document.getElementById('reset-btn');
+const sceneContainer  = document.getElementById('scene-container');
+const storyContainer  = document.getElementById('story-container');
+const infoIdle        = document.getElementById('info-idle');
+const infoActive      = document.getElementById('info-active');
+const wordTitle       = document.getElementById('word-title');
+const wordContext     = document.getElementById('word-context');
+const fingerspellStrip = document.getElementById('fingerspell-strip');
+const fingerspellNote  = document.getElementById('fingerspell-note');
+const aslVideo        = document.getElementById('asl-video');
+const videoNote       = document.getElementById('video-note');
+const dismissBtn      = document.getElementById('dismiss-btn');
 
 // ── Init ──────────────────────────────────────────────────────
 sceneContainer.innerHTML = buildKitchenSVG();
 renderStories();
 attachSceneListeners();
 resetPanel();
-resetBtn.addEventListener('click', resetPanel);
+dismissBtn.addEventListener('click', resetPanel);
 
 // ── Scene: SVG click listeners ───────────────────────────────
 function attachSceneListeners() {
@@ -118,13 +107,23 @@ function parseStory(sentence) {
   });
 }
 
-// Render the source sentence for the info panel, highlighting `target`.
-function renderInContext(target) {
-  const raw = sentenceIndex[target];
-  if (!raw) return '—';
-  return raw.replace(/\{(\w+)\}/g, (_, word) =>
-    word === target ? `<span class="ctx-word">${word}</span>` : word
-  );
+// Render the clicked word as ASL manual-alphabet tiles.
+// Each tile tries to load a handshape image from assets/fingerspell/{letter}.png.
+// If the image is absent (v1), the tile gracefully shows the letter glyph instead.
+function renderFingerspell(word) {
+  const letters = word.toUpperCase().split('');
+  fingerspellStrip.innerHTML = letters.map(ch => {
+    const lower = ch.toLowerCase();
+    if (!/[a-z]/.test(lower)) return `<span class="fs-tile fs-space">${ch}</span>`;
+    return `<span class="fs-tile">
+      <img class="fs-img" alt="ASL handshape for the letter ${ch}"
+           src="assets/fingerspell/${lower}.png"
+           onload="this.parentNode.classList.add('has-img')"
+           onerror="this.remove()">
+      <span class="fs-letter">${ch}</span>
+    </span>`;
+  }).join('');
+  fingerspellNote.textContent = 'Spell it letter by letter in the ASL manual alphabet.';
 }
 
 // ── Shared word click handler ─────────────────────────────────
@@ -137,7 +136,7 @@ function handleWordClick(word, triggerEl) {
 
   wordTitle.textContent      = word.toUpperCase();
   wordContext.textContent    = '…';
-  wordInContext.innerHTML    = renderInContext(word);
+  renderFingerspell(word);
 
   tryVideoUrls(word);
 
