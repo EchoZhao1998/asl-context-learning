@@ -1,12 +1,12 @@
 // ════════════════════════════════════════════════════════════
 //  ASL Context Learning — app.js
-//  Two modes: Explore (SVG scene) and Read (story paragraphs)
-//  Both share the same right-hand info panel.
+//  Unified view: scene banner + story narration on the left,
+//  shared info / ASL video panel on the right.
 // ════════════════════════════════════════════════════════════
 
 // ── Vocabulary map ───────────────────────────────────────────
-// Keys are SVG element IDs (Explore mode) or story data-word values (Read mode).
-// 'word' must exist in WLASL_URLS (wlasl-urls.js).
+// Keys are SVG element data-word values (scene) or story data-word
+// values. 'word' must exist in WLASL_URLS (wlasl-urls.js).
 const vocabularyMap = {
   // Scene objects
   'apple':   { word: 'apple'   },
@@ -44,48 +44,38 @@ const stories = [
   },
 ];
 
+// ── word → first source sentence index (for "In context") ────
+// Maps a clickable word to the raw sentence string it first appears in.
+const sentenceIndex = {};
+stories.forEach(story => {
+  story.sentences.forEach(raw => {
+    const tokens = [...raw.matchAll(/\{(\w+)\}/g)].map(m => m[1]);
+    tokens.forEach(w => {
+      if (!(w in sentenceIndex)) sentenceIndex[w] = raw;
+    });
+  });
+});
+
 // ── DOM refs ─────────────────────────────────────────────────
 const sceneContainer = document.getElementById('scene-container');
 const storyContainer = document.getElementById('story-container');
 const infoIdle       = document.getElementById('info-idle');
 const infoActive     = document.getElementById('info-active');
-const idleHint       = document.getElementById('idle-hint');
 const wordTitle      = document.getElementById('word-title');
 const wordContext    = document.getElementById('word-context');
-const wordPhrases    = document.getElementById('word-phrases');
+const wordInContext  = document.getElementById('word-incontext');
 const aslVideo       = document.getElementById('asl-video');
 const videoNote      = document.getElementById('video-note');
 const resetBtn       = document.getElementById('reset-btn');
-const btnExplore     = document.getElementById('btn-explore');
-const btnRead        = document.getElementById('btn-read');
-const modeExplore    = document.getElementById('mode-explore');
-const modeRead       = document.getElementById('mode-read');
 
 // ── Init ──────────────────────────────────────────────────────
 sceneContainer.innerHTML = buildKitchenSVG();
 renderStories();
 attachSceneListeners();
 resetPanel();
+resetBtn.addEventListener('click', resetPanel);
 
-// ── Mode toggle ───────────────────────────────────────────────
-btnExplore.addEventListener('click', () => switchMode('explore'));
-btnRead.addEventListener('click',    () => switchMode('read'));
-
-function switchMode(mode) {
-  const isExplore = mode === 'explore';
-  modeExplore.classList.toggle('hidden', !isExplore);
-  modeRead.classList.toggle('hidden',     isExplore);
-  btnExplore.classList.toggle('active',   isExplore);
-  btnRead.classList.toggle('active',     !isExplore);
-  btnExplore.setAttribute('aria-selected', isExplore);
-  btnRead.setAttribute('aria-selected',   !isExplore);
-  idleHint.textContent = isExplore
-    ? '← Click any object in the scene to learn its ASL sign.'
-    : '← Tap any highlighted word to see its ASL sign.';
-  resetPanel();
-}
-
-// ── Explore mode: SVG click listeners ────────────────────────
+// ── Scene: SVG click listeners ───────────────────────────────
 function attachSceneListeners() {
   document.querySelectorAll('.interactive-object').forEach(el => {
     const word = el.dataset.word;
@@ -97,7 +87,7 @@ function attachSceneListeners() {
   });
 }
 
-// ── Read mode: render stories ─────────────────────────────────
+// ── Render stories ───────────────────────────────────────────
 function renderStories() {
   storyContainer.innerHTML = stories.map(story => `
     <article class="story" id="story-${story.id}">
@@ -111,7 +101,6 @@ function renderStories() {
     </article>
   `).join('');
 
-  // Attach click listeners to all story words
   document.querySelectorAll('.story-word').forEach(el => {
     const word = el.dataset.word;
     el.addEventListener('click',   () => handleWordClick(word, el));
@@ -129,18 +118,26 @@ function parseStory(sentence) {
   });
 }
 
+// Render the source sentence for the info panel, highlighting `target`.
+function renderInContext(target) {
+  const raw = sentenceIndex[target];
+  if (!raw) return '—';
+  return raw.replace(/\{(\w+)\}/g, (_, word) =>
+    word === target ? `<span class="ctx-word">${word}</span>` : word
+  );
+}
+
 // ── Shared word click handler ─────────────────────────────────
 function handleWordClick(word, triggerEl) {
-  // Clear previous active highlights
   document.querySelectorAll('.interactive-object, .story-word').forEach(el => el.classList.remove('active'));
-  triggerEl.classList.add('active');
+  if (triggerEl) triggerEl.classList.add('active');
 
   infoIdle.classList.add('hidden');
   infoActive.classList.remove('hidden');
 
-  wordTitle.textContent   = word.toUpperCase();
-  wordContext.textContent = '…';
-  wordPhrases.textContent = '…';
+  wordTitle.textContent      = word.toUpperCase();
+  wordContext.textContent    = '…';
+  wordInContext.innerHTML    = renderInContext(word);
 
   tryVideoUrls(word);
 
@@ -150,13 +147,6 @@ function handleWordClick(word, triggerEl) {
       wordContext.textContent = data.length ? data.map(d => d.word).join(', ') : '—';
     })
     .catch(() => { wordContext.textContent = 'Could not load.'; });
-
-  fetch(`https://api.datamuse.com/words?lc=${word}&max=5`)
-    .then(r => r.json())
-    .then(data => {
-      wordPhrases.textContent = data.length ? data.map(d => d.word).join(', ') : '—';
-    })
-    .catch(() => { wordPhrases.textContent = 'Could not load.'; });
 }
 
 // ── Video fallback chain ──────────────────────────────────────
@@ -192,13 +182,11 @@ function resetPanel() {
   infoActive.classList.add('hidden');
   infoIdle.classList.remove('hidden');
   aslVideo.pause();
-  aslVideo.src    = '';
+  aslVideo.src     = '';
   aslVideo.onerror = null;
   videoNote.textContent = '';
   document.querySelectorAll('.interactive-object, .story-word').forEach(el => el.classList.remove('active'));
 }
-
-resetBtn.addEventListener('click', resetPanel);
 
 // ── Kitchen SVG ───────────────────────────────────────────────
 function buildKitchenSVG() {

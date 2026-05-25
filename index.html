@@ -13,30 +13,24 @@
       <span class="logo">ASL Context Learning</span>
       <span class="tagline">Built by a deaf learner, for deaf learners.</span>
     </div>
-    <nav class="mode-toggle" role="tablist" aria-label="Learning mode">
-      <button id="btn-explore" class="mode-btn active" role="tab" aria-selected="true">Explore</button>
-      <button id="btn-read"    class="mode-btn"        role="tab" aria-selected="false">Read</button>
-    </nav>
   </header>
 
   <main>
 
-    <!-- ── EXPLORE MODE ─────────────────────────────────────── -->
-    <div id="mode-explore" class="mode-panel">
-      <section class="scene-panel" id="scene-container"></section>
-    </div>
-
-    <!-- ── READ MODE ────────────────────────────────────────── -->
-    <div id="mode-read" class="mode-panel hidden">
-      <section class="story-panel" id="story-container">
+    <!-- ── LEFT: scene banner + narration ───────────────────── -->
+    <section class="content-panel">
+      <div class="scene-banner" id="scene-container">
+        <!-- Scene SVG injected by app.js -->
+      </div>
+      <div class="story-panel" id="story-container">
         <!-- Stories rendered by app.js -->
-      </section>
-    </div>
+      </div>
+    </section>
 
-    <!-- ── INFO SIDEBAR (shared by both modes) ──────────────── -->
+    <!-- ── RIGHT: shared info / video panel ──────────────────── -->
     <aside class="info-panel" id="info-panel">
       <div class="info-idle" id="info-idle">
-        <p id="idle-hint">← Click any object in the scene to learn its ASL sign.</p>
+        <p id="idle-hint">Click any object in the scene above, or any highlighted word in the story, to learn its ASL sign.</p>
       </div>
 
       <div class="info-active hidden" id="info-active">
@@ -55,8 +49,8 @@
         </div>
 
         <div class="context-wrap">
-          <h3>Common phrases with</h3>
-          <p id="word-phrases">—</p>
+          <h3>In context</h3>
+          <p id="word-incontext">—</p>
         </div>
 
         <button class="reset-btn" id="reset-btn">← Back</button>
