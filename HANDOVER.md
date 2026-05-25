@@ -137,3 +137,9 @@ asl-context-learning/
 - **GitHub Pages deployment**: ready to go live whenever Echo wants — just needs `git push` and Pages enabled in repo settings. Add the URL to `ezhozhao.github.io`.
 - **Second story topic**: "At the Doctor" would be strong for the accessibility/disability angle. "Going to School" is more neutral. Echo's call.
 - **Phase 2 timing**: fingerspelling fallback is a significant feature — worth a dedicated session when Phase 1 is fully deployed.
+
+## Echo's notes
+
+- Re: Second story. I notice current story is scatch from word hand-code in [file](scripts/build-lookup.js). I am wandering how I process all the words in [WLASL](WLASL_v0.3.json). talior them to different short story. and the scenario picture background makes sense as well. 
+- Current layout split `Explore` and `Read` into two tab, whether it can comboine into one. the full layout split into 3 columns - left show the short narration; middle display the scenario; right part is ASL video zone. 
+- I notice the `Common phrases with` section almost show noting ("-"), whether I delete it? or can change it place "story" paragraph. Then the layout still be like current one, only move `read` under the video window. Critically discuss with me. 
