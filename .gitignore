@@ -1,0 +1,8 @@
+# WLASL dataset — 12MB, do not push to GitHub
+WLASL_v0.3.json
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/

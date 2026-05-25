@@ -9,21 +9,34 @@
 <body>
 
   <header>
-    <span class="logo">ASL Context Learning</span>
-    <span class="tagline">Built by a deaf learner, for deaf learners.</span>
+    <div class="header-left">
+      <span class="logo">ASL Context Learning</span>
+      <span class="tagline">Built by a deaf learner, for deaf learners.</span>
+    </div>
+    <nav class="mode-toggle" role="tablist" aria-label="Learning mode">
+      <button id="btn-explore" class="mode-btn active" role="tab" aria-selected="true">Explore</button>
+      <button id="btn-read"    class="mode-btn"        role="tab" aria-selected="false">Read</button>
+    </nav>
   </header>
 
   <main>
 
-    <!-- LEFT: Interactive kitchen scene -->
-    <section class="scene-panel" id="scene-container">
-      <!-- Inline SVG kitchen will be injected here by app.js -->
-    </section>
+    <!-- ── EXPLORE MODE ─────────────────────────────────────── -->
+    <div id="mode-explore" class="mode-panel">
+      <section class="scene-panel" id="scene-container"></section>
+    </div>
 
-    <!-- RIGHT: Info sidebar -->
+    <!-- ── READ MODE ────────────────────────────────────────── -->
+    <div id="mode-read" class="mode-panel hidden">
+      <section class="story-panel" id="story-container">
+        <!-- Stories rendered by app.js -->
+      </section>
+    </div>
+
+    <!-- ── INFO SIDEBAR (shared by both modes) ──────────────── -->
     <aside class="info-panel" id="info-panel">
       <div class="info-idle" id="info-idle">
-        <p>← Click any object in the scene to learn its ASL sign.</p>
+        <p id="idle-hint">← Click any object in the scene to learn its ASL sign.</p>
       </div>
 
       <div class="info-active hidden" id="info-active">
@@ -32,7 +45,6 @@
         <div class="video-wrap">
           <video id="asl-video" loop autoplay muted playsinline>
             <source src="" type="video/mp4" />
-            <p class="video-fallback">Video not available yet. Download the WLASL clip and place it in <code>assets/videos/</code>.</p>
           </video>
           <p class="video-note" id="video-note"></p>
         </div>
@@ -47,7 +59,7 @@
           <p id="word-phrases">—</p>
         </div>
 
-        <button class="reset-btn" id="reset-btn">← Back to scene</button>
+        <button class="reset-btn" id="reset-btn">← Back</button>
       </div>
     </aside>
 
@@ -57,6 +69,7 @@
     <span>ASL signs from <a href="https://www.kaggle.com/datasets/risangbaskoro/wlasl-processed" target="_blank">WLASL dataset</a> · Context words from <a href="https://www.datamuse.com/api/" target="_blank">Datamuse API</a></span>
   </footer>
 
+  <script src="wlasl-urls.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

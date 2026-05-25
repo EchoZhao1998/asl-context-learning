@@ -25,34 +25,86 @@ html, body {
 /* ── Header ────────────────────────────────────────────────── */
 header {
   display: flex;
-  align-items: baseline;
-  gap: 16px;
-  padding: 18px 32px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 56px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
 .logo {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .tagline {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── Mode toggle ───────────────────────────────────────────── */
+.mode-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px;
+}
+
+.mode-btn {
+  padding: 5px 18px;
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mode-btn.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.mode-btn:hover:not(.active) {
+  color: var(--accent);
 }
 
 /* ── Main layout ───────────────────────────────────────────── */
 main {
   display: grid;
   grid-template-columns: 1fr 340px;
-  height: calc(100vh - 57px - 44px); /* full height minus header + footer */
+  height: calc(100vh - 56px - 44px);
 }
 
-/* ── Scene panel (left) ────────────────────────────────────── */
+.mode-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+/* ── Explore: scene panel ──────────────────────────────────── */
 .scene-panel {
+  flex: 1;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
@@ -68,10 +120,9 @@ main {
   max-height: 520px;
 }
 
-/* SVG interactive objects */
 .interactive-object {
   cursor: pointer;
-  transition: opacity 0.15s ease, filter 0.15s ease;
+  transition: opacity 0.15s, filter 0.15s;
 }
 
 .interactive-object:hover {
@@ -83,7 +134,6 @@ main {
   filter: drop-shadow(0 0 10px var(--highlight));
 }
 
-/* Object labels in SVG */
 .obj-label {
   font-family: var(--font);
   font-size: 11px;
@@ -93,7 +143,84 @@ main {
   letter-spacing: 0.06em;
 }
 
-/* ── Info panel (right) ────────────────────────────────────── */
+/* ── Read: story panel ─────────────────────────────────────── */
+.story-panel {
+  flex: 1;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 40px 44px;
+}
+
+.story {
+  max-width: 540px;
+}
+
+.story-meta {
+  margin-bottom: 8px;
+}
+
+.story-scene {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--highlight);
+}
+
+.story-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  line-height: 1.3;
+}
+
+.story-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.story-sentence {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: var(--text);
+}
+
+/* Clickable story words */
+.story-word {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 1px 2px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.story-word.has-sign {
+  color: var(--highlight);
+  text-decoration: underline;
+  text-decoration-color: rgba(78, 134, 255, 0.4);
+  text-underline-offset: 3px;
+}
+
+.story-word.has-sign:hover,
+.story-word.has-sign:focus {
+  background: rgba(78, 134, 255, 0.1);
+  outline: none;
+}
+
+.story-word.has-sign.active {
+  background: rgba(78, 134, 255, 0.18);
+  color: var(--accent);
+}
+
+.story-word.no-sign {
+  color: var(--muted);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: default;
+}
+
+/* ── Info panel (right — shared) ───────────────────────────── */
 .info-panel {
   background: var(--bg);
   padding: 28px 24px;
@@ -105,12 +232,11 @@ main {
 .info-idle {
   margin: auto;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   text-align: center;
-  line-height: 1.8;
+  line-height: 1.9;
+  padding: 0 8px;
 }
-
-.hidden { display: none !important; }
 
 .info-active h2 {
   font-size: 2rem;
@@ -126,7 +252,7 @@ main {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   text-align: center;
 }
 
@@ -134,43 +260,37 @@ main {
   width: 100%;
   max-height: 220px;
   border-radius: 4px;
-  background: #000;
+  background: #111;
   display: block;
 }
 
 .video-note {
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   color: var(--muted);
   margin-top: 8px;
+  min-height: 1em;
 }
 
-.video-fallback {
-  color: var(--muted);
-  font-size: 0.8rem;
-  padding: 16px 0;
-}
-
-/* ── Context words ─────────────────────────────────────────── */
+/* ── Context cards ─────────────────────────────────────────── */
 .context-wrap {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 14px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
 }
 
 .context-wrap h3 {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted);
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .context-wrap p {
-  font-size: 0.9rem;
-  color: var(--text);
+  font-size: 0.88rem;
 }
 
 /* ── Reset button ──────────────────────────────────────────── */
@@ -204,9 +324,5 @@ footer {
   color: var(--muted);
 }
 
-footer a {
-  color: var(--muted);
-  text-decoration: underline;
-}
-
+footer a { color: var(--muted); text-decoration: underline; }
 footer a:hover { color: var(--accent); }
