@@ -1,3 +1,4 @@
 ## At the Doctor
 
 I sit on the tall chair in the quiet **hospital** room. I feel very **sick** and **tired** today. I keep my eyes on the door because I cannot hear my **name**. Soon, the **nurse** waves her hand to call me in. I enter the room and sit on the tall chair. Because I am **deaf**, the kind doctor pulls down her **mask** so I can see her lips. She checks my **temperature**.  She writes **sentences** on a notepad to explain my **bad** **winter** **cold**. She tells me to go **home** immediately, drink **warm** water, and rest in a comfortable bed. I type **"thank you"** on my phone. This visual visit makes me feel **safe**.
+
