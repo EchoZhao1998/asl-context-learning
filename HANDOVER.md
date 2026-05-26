@@ -22,29 +22,31 @@ An interactive web app for **late-deafened adult ESL learners** to learn ASL sig
 Repo is clean. Session 4's three build tasks are done and committed:
 
 ```
-git log --oneline -5
-3356d7f Session 4 (Task 1): Gemini scene image as context backdrop
-193be32 Session 4 (Tasks 2-3): x deselect button + fingerspelling strip; merge handover
-548cf0b Session 3: unified single-screen layout, in-context card, story linter; Session 4 brief
-9ab6cb9 commend on first stage handover. Discuss how to handle the data to assist narration, and the layout.
-01ff35c build the MVP
+git log --oneline -6
+38192fb Revert to interactive SVG scene; 60/40 layout; ASL alphabet modal
+ac4f7eb Docs: close out Session 4 in HANDOVER (tasks 1-3 done)
+3356d7f Session 4 (Task 1): Gemini scene image as context backdrop  ← REVERTED in 38192fb
+193be32 Session 4 (Tasks 2-3): x deselect + fingerspelling strip
+548cf0b Session 3: unified single-screen layout
+9ab6cb9 commend on first stage handover
 ```
 
 ### Built and working
 
 | File | Purpose | Status |
 |---|---|---|
-| `index.html` | Single-screen layout: image banner + story (left), info/video/fingerspell panel (right) — NO tabs | ✅ Done |
-| `style.css` | Swiss-minimal, 2-column grid, image banner, fingerspell tiles, × dismiss, responsive stack | ✅ Done |
-| `app.js` | vocabularyMap, stories (with `image`), renderScene, shared click handler, fingerspell, video fallback chain | ✅ Done |
-| `assets/image/home-kitchen.png` | Gemini-generated scene backdrop for the kitchen story (1376×768) | ✅ Present |
+| `index.html` | Single-screen layout: interactive SVG scene + story (left), info/video/fingerspell panel (right); alphabet modal | ✅ Done |
+| `style.css` | Swiss-minimal, 2-column grid, scene 60% / story 40% vertical split, fingerspell tiles, × dismiss, modal | ✅ Done |
+| `app.js` | vocabularyMap, stories (with `sceneBuilder` key), `sceneBuilders` map, click handler, fingerspell, modal, video | ✅ Done |
+| `assets/image/ASL.png` | ASL manual alphabet chart for the modal (375×500, WebP-in-PNG). ⚠ Has visible copyright watermark — see deployment note. | ⚠ Present |
+| `assets/image/home-kitchen.png` | Old Gemini backdrop. **Unused** after revert — kept in repo so we can re-evaluate later. Safe to delete. | ⚠ Unused |
 | `wlasl-urls.js` | Auto-generated URL lookup, 14 words, ~9KB | ✅ Done |
 | `scripts/build-lookup.js` | Regenerates wlasl-urls.js from WLASL_v0.3.json | ✅ Done |
 | `scripts/lint-story.js` | Author-first helper: checks draft text against WLASL coverage | ✅ Done |
 | `WLASL_v0.3.json` | Full 2000-word dataset, local only, gitignored | ✅ Present |
 | `.gitignore` | Excludes WLASL JSON and .DS_Store | ✅ Done |
 
-**Asset state:** `assets/image/home-kitchen.png` is in place (the kitchen scene backdrop). `assets/fingerspell/` exists with a README but **no handshape images yet** — the Fingerspell card currently shows letter glyphs and auto-upgrades to handshapes the moment `a.png … z.png` are dropped in. `assets/svgs/` and `assets/videos/` are still empty (spare/optional).
+**Asset state:** `assets/image/ASL.png` (alphabet chart, used by the modal) and the unused `home-kitchen.png` (kept for reference) live in `assets/image/`. `assets/fingerspell/` exists with a README but **no handshape images yet** — the Fingerspell strip currently shows letter glyphs and auto-upgrades to handshapes the moment `a.png … z.png` are dropped in. `assets/svgs/` and `assets/videos/` are still empty.
 
 ### Session 3 changes (decided WITH Echo)
 - **Layout merged.** Dropped the Explore/Read tabs. One screen: left column = scene banner above the story narration; right column = shared info/video panel. Clicking a scene object OR a story word both drive the same panel. (Chosen over 3-column because we didn't yet have one scene illustration per story.)
@@ -70,21 +72,42 @@ All three tasks built, verified with a jsdom DOM test, and committed.
 ### ✅ Task 3 — "×" deselect replaces "← Back"
 - Dead bottom "← Back" button removed. A small round **×** sits top-right of the active panel (`#dismiss-btn`) and calls `resetPanel()` to return to idle.
 
+---
+
+## Session 4 — follow-up reversal (2026-05-26, commit `38192fb`)
+
+Echo reviewed the Gemini-backdrop version and flagged two issues. We acted on both.
+
+### Reversal: back to interactive SVG scene
+- **Why we reverted Task 1's raster backdrop:** Echo noted the Gemini image looked comic-y and read as VL2/Gallaudet-style, which undercuts the differentiation pitch. The interactive SVG's hover-to-glow is also the actual demo moment that lands in 30 seconds.
+- **What's in place now:** a new polished kitchen SVG via a `sceneBuilders` map keyed by `story.sceneBuilder`. Six interactive objects (apple, chair, **cup**, glass, knife, table) — adding `cup` resolves the previously dead vocab entry, and the story now uses `{cup}` too.
+- **SVG polish:** gradients (wall, floor, table, apple), sunbeam from a mullioned window, soft floor shadow, hover-glow per object, labels visible by default. Distinctly more considered than the prior crude shapes; still Swiss-minimal.
+- **Layout:** 60% scene / 40% story vertical split inside the left column (`flex: 0 0 60%` / `flex: 1 1 40%`). Story scrolls inside its area.
+- **`sceneBuilders` pattern:** adding a story = add a row to `stories` + add a builder function under `sceneBuilders`. Documented in §"Workflows".
+- **Scaling note (carried forward):** hand-built SVG per scene won't scale past 3–4 scenes. Echo plans to ask peers/professors for a long-run approach (component library? trace-over-Gemini? procedural?). Acceptable for now.
+
+### New: "Show ASL alphabet" modal
+- The Fingerspell card now has a "Show ASL alphabet" button. It opens a centered modal showing `assets/image/ASL.png` (the manual alphabet chart). Dismisses on the modal's own ×, backdrop click, or Escape. Accessible via `role="dialog" aria-modal="true"` + focus management on open.
+- Strip note updated: "Don't know the handshapes yet? Open the chart below."
+
 ### Carried forward / still open
-- **Handshape images:** drop `a.png … z.png` into `assets/fingerspell/` to upgrade the strip. (Optional: a single ASL-alphabet reference chart as an even-lighter fallback — not built.)
-- **`cup` is an unused vocab entry:** it's in `vocabularyMap` but appears in no story text (and wasn't surfaced in the old SVG scene either), so it's currently never clickable. Either add it to a story sentence or drop it from the map.
-- **Second story topic:** "At the Doctor" (strong accessibility angle) vs. "Going to School". Linter already validated an "At the Doctor…" draft (doctor/insurance/card/appointment coverable, "lobby" → fingerspell). Each new story now also needs its own Gemini image in `assets/image/`.
-- **GitHub Pages deployment:** ready when Echo wants — `git push` + enable Pages, then add the URL to `ezhozhao.github.io`.
+- **⚠ `ASL.png` is copyright-watermarked ("Gérard Aflague Collection").** Fine for prototype/demo. **Before public GitHub Pages deployment**, swap to a CC/public-domain ASL alphabet chart (Wikimedia Commons has several), link out instead of embedding, or use the 26 handshape images we render ourselves.
+- **`ASL.png` is actually a WebP file** with a `.png` extension. Browsers handle it, but consider renaming to `.webp` for honesty, or convert to true PNG.
+- **Handshape images:** drop `a.png … z.png` into `assets/fingerspell/` to upgrade the per-letter strip from glyphs to handshapes (no code change needed).
+- **Old `home-kitchen.png` is unused** post-revert. Keep for reference or `git rm`.
+- **Second story topic:** "At the Doctor" (strong accessibility angle) vs. "Going to School". Linter already validated an "At the Doctor…" draft. Each new story now also needs **its own scene builder** in `app.js` (`sceneBuilders.atTheDoctor = () => \`<svg…>\``).
+- **Scene scaling beyond ~3 stories:** decide a long-run approach (peer/professor input).
+- **GitHub Pages deployment:** ready — `git push` + enable Pages, then add the URL to `ezhozhao.github.io`. Do the ASL.png swap first.
 
 ---
 
 ## Vocabulary & current story
 
 **Vocabulary (14 words):**
-- Scene: `apple`, `chair`, `table`, `glass`, `knife`
-- Story: `kitchen`, `hungry`, `water`, `morning`, `eat`, `drink`, `food`, `cup`, `bread`
+- Scene (clickable in the SVG): `apple`, `chair`, `cup`, `glass`, `knife`, `table`
+- Story-only (clickable as underlined words in the prose): `bread`, `drink`, `eat`, `food`, `hungry`, `kitchen`, `morning`, `water`
 
-**Current story:** "A Morning in the Kitchen" — 5 sentences using all 14 words. Lives in the `stories` array in `app.js`.
+**Current story:** "A Morning in the Kitchen" — 5 sentences. Every vocab word now appears in the story prose (so each is clickable in at least one place; the six scene objects are clickable in both places).
 
 **How video loading works:** `tryVideoUrls(word)` walks through `WLASL_URLS[word]` silently, skipping CORS/404 failures until one plays. A note is shown only on total failure.
 
@@ -98,7 +121,8 @@ All three tasks built, verified with a jsdom DOM test, and committed.
 | Single info panel shared by all interactions | Same UX flow regardless of source — less to learn |
 | Pre-built `wlasl-urls.js`, not runtime JSON parse | WLASL JSON is ~12MB — too heavy for the browser |
 | `data-word` attribute as the unified click model | Same `handleWordClick(word)` used everywhere |
-| Scene image is a non-clickable backdrop (v1) | A raster PNG has no object structure; avoids per-scene hotspot coordinate math (may revisit — see Task 1 note) |
+| Interactive SVG scene (one builder per story) | Hover-to-glow is the demo moment + visual differentiation from VL2-style storybook apps. Hand-built; doesn't scale past ~3 stories without a new approach. |
+| `sceneBuilders` map keyed by `story.sceneBuilder` | Adding a story = add a row + add a builder function. Mechanical, explicit. |
 | ASL (not Auslan/BIM) | Echo learning ASL personally; ASL/BIM structural overlap is a partial advantage |
 | Target user locked to Option A | Late-deafened adult ESL learner — underserved, differentiable, Echo IS the user |
 
@@ -114,13 +138,16 @@ All three tasks built, verified with a jsdom DOM test, and committed.
 - [x] Video fallback chain across multiple WLASL sources
 
 ### Phase 1 remaining
-- [x] Session 4 tasks 1–3 — scene image backdrop, fingerspell strip, × dismiss (done 2026-05-25)
-- [ ] Add handshape images `a.png … z.png` to `assets/fingerspell/` (upgrades the strip to real ASL handshapes)
-- [ ] Add 1–2 more stories (each now also needs its own Gemini image in `assets/image/`). Workflow: draft narration as plain text → `node scripts/lint-story.js draft.txt` → add coverable words to `vocabularyMap` + the `stories` array (wrap in `{word}`) → add the same words to `VOCAB_WORDS` in `build-lookup.js` → run `node scripts/build-lookup.js`.
-- [ ] Decide on `cup` — unused vocab entry (not in any story text); add it to a sentence or remove from `vocabularyMap`.
-- [ ] GitHub Pages deployment — one push, enable Pages, then add the URL to `ezhozhao.github.io`
+- [x] Session 4 tasks 1–3 — fingerspell strip, × dismiss, scene work (done 2026-05-25)
+- [x] Session 4 follow-up — revert to SVG scene, 60/40 layout, alphabet modal (done 2026-05-26)
+- [x] Surface `cup` in the scene + story (done in revert)
+- [ ] Swap `ASL.png` for a CC/public-domain chart (or render our own) — required before public deploy
+- [ ] Add handshape images `a.png … z.png` to `assets/fingerspell/` — upgrades the per-letter strip to real handshapes
+- [ ] Add 1–2 more stories. Workflow now: draft narration → `node scripts/lint-story.js draft.txt` → add to `vocabularyMap` + `stories` array + `VOCAB_WORDS` → run `build-lookup.js` → **write a new SVG `sceneBuilders` entry** for the scene.
+- [ ] Long-run scene-art approach (3+ stories) — ask peers/professors
+- [ ] GitHub Pages deployment
 - [ ] Test video playback across all 14 words; note persistent failures
-- [ ] Add a loading spinner while video tries sources (replace "Loading…" text)
+- [ ] Add a loading spinner while video tries sources
 
 ### Phase 2 — Smart fallback for unknown words
 If a clicked word is NOT in WLASL, trigger a fingerspelling engine (CSS cross-fade A→B→C letter images, or Lottie). Makes the app work for *any* English word. Session 4's fingerspelling strip (Task 2) is the on-ramp to this.
@@ -135,11 +162,12 @@ If a clicked word is NOT in WLASL, trigger a fingerspelling engine (CSS cross-fa
 ## Workflows
 
 **Add a new story:**
-1. Add an object to the `stories` array in `app.js`: `{ id: 'at-the-doctor', title: 'At the Doctor', scene: 'Health · Clinic', sentences: [...] }`
+1. Add an object to the `stories` array in `app.js`: `{ id: 'at-the-doctor', title: 'At the Doctor', scene: 'Health · Clinic', sceneBuilder: 'doctorOffice', sentences: [...] }`
 2. Wrap WLASL words in `{word}` inside sentences.
 3. Add new words to `vocabularyMap` in `app.js` **and** to `VOCAB_WORDS` in `scripts/build-lookup.js`.
 4. Run `node scripts/build-lookup.js` to regenerate `wlasl-urls.js`.
-5. Commit: `app.js`, `wlasl-urls.js`, `scripts/build-lookup.js`.
+5. **Add a new scene builder** under `sceneBuilders` in `app.js`: `doctorOffice: () => \`<svg viewBox="0 0 960 540" …>…</svg>\``. Make any scene objects clickable by giving each `<g>` `class="interactive-object" data-word="…"`.
+6. Commit: `app.js`, `wlasl-urls.js`, `scripts/build-lookup.js`.
 
 **Author-first drafting:** write the narration as plain text → `node scripts/lint-story.js draft.txt` to see WLASL coverage → add coverable words per the steps above; non-coverable words become fingerspelling candidates.
 
@@ -162,15 +190,15 @@ If a clicked word is NOT in WLASL, trigger a fingerspelling engine (CSS cross-fa
 
 ```
 asl-context-learning/
-├── index.html              ← layout
+├── index.html              ← layout + alphabet modal
 ├── style.css               ← all styling
-├── app.js                  ← all logic (vocabularyMap, stories+image, renderScene, fingerspell, video)
+├── app.js                  ← all logic (vocabularyMap, stories, sceneBuilders, fingerspell, modal, video)
 ├── wlasl-urls.js           ← AUTO-GENERATED — run build-lookup.js, do not edit
 ├── WLASL_v0.3.json         ← local only, gitignored, never push to GitHub
 ├── HANDOVER.md             ← this file — update every session
 ├── .gitignore
 ├── assets/
-│   ├── image/              ← per-story scene backdrops (home-kitchen.png)
+│   ├── image/              ← ASL.png (alphabet chart, used by modal) + home-kitchen.png (unused after revert)
 │   ├── fingerspell/        ← drop a.png … z.png here → tiles auto-upgrade to handshapes
 │   ├── videos/             ← local mp4 fallback (optional, empty)
 │   └── svgs/               ← spare folder (empty)
@@ -184,6 +212,7 @@ asl-context-learning/
 ## Resolved in earlier sessions (kept for context)
 
 - ~~Process all WLASL words into stories~~ → **author-first.** Most of the 2000 glosses are function/abstract words; auto-stories read poorly. Write narration first, then `lint-story.js` reports coverage.
-- ~~Combine Explore + Read into one 3-column layout~~ → **kept 2-column + scene banner (Session 4).** Landscape Gemini images suit a wide top banner; 3-column deferred unless future images are portrait/square.
+- ~~Combine Explore + Read into one 3-column layout~~ → **kept 2-column + scene banner (Session 4).** Vertical 60/40 split inside the left column gives the scene most of the real estate.
 - ~~"Common phrases with" shows nothing~~ → replaced with "In context" (Session 3) → **replaced with the Fingerspell strip (Session 4).**
-- ~~Scene art scaling~~ → **resolved (Session 4):** one Gemini-generated image per story, non-clickable backdrop, sourced in the Gemini app and dropped into `assets/image/`. Hotspots remain a possible later test.
+- ~~Scene art scaling — Gemini backdrop~~ → tried (commit `3356d7f`) → **reverted (commit `38192fb`)** because the raster image read as VL2/Gallaudet-style and lost the hover-to-glow demo moment. We're back on hand-built SVG via a `sceneBuilders` map. Long-run scaling beyond ~3 stories is an open question (Echo to ask peers/professors).
+- ~~"In context" card was redundant~~ → resolved (Session 4): the Fingerspell card replaces it; the alphabet chart modal answers "but what are these letters?"
