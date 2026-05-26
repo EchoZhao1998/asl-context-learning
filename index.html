@@ -20,7 +20,7 @@
     <!-- ── LEFT: scene banner + narration ───────────────────── -->
     <section class="content-panel">
       <div class="scene-banner" id="scene-container">
-        <!-- Scene backdrop image injected by app.js (non-clickable; context only) -->
+        <!-- Interactive scene SVG injected by app.js (per-story builder) -->
       </div>
       <div class="story-panel" id="story-container">
         <!-- Stories rendered by app.js -->
@@ -55,11 +55,25 @@
           <h3>Fingerspell</h3>
           <div class="fingerspell-strip" id="fingerspell-strip"></div>
           <p class="fingerspell-note" id="fingerspell-note"></p>
+          <button class="alphabet-btn" id="alphabet-btn" type="button">Show ASL alphabet</button>
         </div>
       </div>
     </aside>
 
   </main>
+
+  <!-- ── ASL alphabet reference modal ──────────────────────── -->
+  <div class="modal hidden" id="alphabet-modal" role="dialog" aria-modal="true" aria-labelledby="alphabet-title">
+    <div class="modal-backdrop" id="alphabet-backdrop"></div>
+    <div class="modal-content" role="document">
+      <div class="modal-head">
+        <h3 id="alphabet-title">ASL Manual Alphabet</h3>
+        <button class="dismiss-btn" id="alphabet-close" aria-label="Close" title="Close">&times;</button>
+      </div>
+      <img src="assets/image/ASL.png" alt="American Sign Language manual alphabet chart, showing the handshape for each letter A through Z" class="alphabet-img">
+      <p class="modal-note">Reference chart — match each letter of the word above to its handshape.</p>
+    </div>
+  </div>
 
   <footer>
     <span>ASL signs from <a href="https://www.kaggle.com/datasets/risangbaskoro/wlasl-processed" target="_blank">WLASL dataset</a> · Context words from <a href="https://www.datamuse.com/api/" target="_blank">Datamuse API</a></span>
