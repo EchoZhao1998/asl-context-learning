@@ -8,6 +8,7 @@
 // Keys are SVG data-word values (scene) or story data-word values.
 // `word` must exist in WLASL_URLS (wlasl-urls.js).
 const vocabularyMap = {
+  // ── Kitchen story ──
   // Scene objects
   'apple':   { word: 'apple'   },
   'chair':   { word: 'chair'   },
@@ -24,6 +25,55 @@ const vocabularyMap = {
   'drink':   { word: 'drink'   },
   'food':    { word: 'food'    },
   'bread':   { word: 'bread'   },
+
+  // ── Doctor story ──
+  // WLASL-covered (have video)
+  'doctor':      { word: 'doctor'      },
+  'sit':         { word: 'sit'         },
+  'tall':        { word: 'tall'        },
+  'quiet':       { word: 'quiet'       },
+  'hospital':    { word: 'hospital'    },
+  'room':        { word: 'room'        },
+  'feel':        { word: 'feel'        },
+  'very':        { word: 'very'        },
+  'sick':        { word: 'sick'        },
+  'tired':       { word: 'tired'       },
+  'today':       { word: 'today'       },
+  'keep':        { word: 'keep'        },
+  'eyes':        { word: 'eyes'        },
+  'door':        { word: 'door'        },
+  'because':     { word: 'because'     },
+  'cannot':      { word: 'cannot'      },
+  'hear':        { word: 'hear'        },
+  'name':        { word: 'name'        },
+  'soon':        { word: 'soon'        },
+  'nurse':       { word: 'nurse'       },
+  'call':        { word: 'call'        },
+  'enter':       { word: 'enter'       },
+  'deaf':        { word: 'deaf'        },
+  'down':        { word: 'down'        },
+  'see':         { word: 'see'         },
+  'temperature': { word: 'temperature' },
+  'explain':     { word: 'explain'     },
+  'bad':         { word: 'bad'         },
+  'winter':      { word: 'winter'      },
+  'cold':        { word: 'cold'        },
+  'go':          { word: 'go'          },
+  'home':        { word: 'home'        },
+  'warm':        { word: 'warm'        },
+  'rest':        { word: 'rest'        },
+  'comfortable': { word: 'comfortable' },
+  'bed':         { word: 'bed'         },
+  'type':        { word: 'type'        },
+  'phone':       { word: 'phone'       },
+  'visit':       { word: 'visit'       },
+  'safe':        { word: 'safe'        },
+  // Fingerspell-only (no WLASL video — strip shows letters/handshapes).
+  // Included so they render as clickable in the prose; the deaf-experience
+  // moment in the story hinges on `mask` / `lips` / `sentences`.
+  'mask':        { word: 'mask',      fingerspellOnly: true },
+  'lips':        { word: 'lips',      fingerspellOnly: true },
+  'sentences':   { word: 'sentences', fingerspellOnly: true },
 };
 
 // ── Stories data ─────────────────────────────────────────────
@@ -44,34 +94,83 @@ const stories = [
       'I sit on my {chair}, take my {cup}, and I {eat} and {drink} slowly.',
     ],
   },
+  {
+    id: 'at-the-doctor',
+    title: 'At the Doctor',
+    scene: 'Health · Clinic',
+    sceneBuilder: 'clinic',
+    sentences: [
+      'I {sit} on the {tall} {chair} in the {quiet} {hospital} {room}.',
+      'I {feel} {very} {sick} and {tired} {today}.',
+      'I {keep} my {eyes} on the {door} {because} I {cannot} {hear} my {name}.',
+      'Soon, the {nurse} waves her hand to {call} me in.',
+      'I {enter} the {room} and {sit} on the {tall} {chair}.',
+      'Because I am {deaf}, the kind {doctor} pulls {down} her {mask} so I can {see} her {lips}.',
+      'She checks my {temperature}.',
+      'She writes {sentences} on a notepad to {explain} my {bad} {winter} {cold}.',
+      'She tells me to {go} {home} immediately, {drink} {warm} {water}, and {rest} in a {comfortable} {bed}.',
+      'I {type} "thank you" on my {phone}.',
+      'This visual {visit} makes me {feel} {safe}.',
+    ],
+  },
 ];
 
 // ── DOM refs ─────────────────────────────────────────────────
-const sceneContainer   = document.getElementById('scene-container');
-const storyContainer   = document.getElementById('story-container');
-const infoIdle         = document.getElementById('info-idle');
-const infoActive       = document.getElementById('info-active');
-const wordTitle        = document.getElementById('word-title');
-const wordContext      = document.getElementById('word-context');
-const fingerspellStrip = document.getElementById('fingerspell-strip');
-const fingerspellNote  = document.getElementById('fingerspell-note');
-const aslVideo         = document.getElementById('asl-video');
-const videoNote        = document.getElementById('video-note');
-const dismissBtn       = document.getElementById('dismiss-btn');
-const alphabetBtn      = document.getElementById('alphabet-btn');
-const alphabetModal    = document.getElementById('alphabet-modal');
-const alphabetClose    = document.getElementById('alphabet-close');
-const alphabetBackdrop = document.getElementById('alphabet-backdrop');
+const sceneContainer    = document.getElementById('scene-container');
+const storyContainer    = document.getElementById('story-container');
+const storySelectorWrap = document.getElementById('story-selector-wrap');
+const infoIdle          = document.getElementById('info-idle');
+const infoActive        = document.getElementById('info-active');
+const wordTitle         = document.getElementById('word-title');
+const wordContext       = document.getElementById('word-context');
+const fingerspellStrip  = document.getElementById('fingerspell-strip');
+const fingerspellNote   = document.getElementById('fingerspell-note');
+const aslVideo          = document.getElementById('asl-video');
+const videoNote         = document.getElementById('video-note');
+const dismissBtn        = document.getElementById('dismiss-btn');
+const alphabetBtn       = document.getElementById('alphabet-btn');
+const alphabetModal     = document.getElementById('alphabet-modal');
+const alphabetClose     = document.getElementById('alphabet-close');
+const alphabetBackdrop  = document.getElementById('alphabet-backdrop');
+
+// Current story index (drives both the scene and the narration).
+let currentStoryIndex = 0;
 
 // (Init runs at the bottom of this file, after `sceneBuilders` is
 // defined — avoids a temporal-dead-zone reference error.)
 
+// ── Story switcher ───────────────────────────────────────────
+// Smallest viable multi-story nav: a <select> rendered above the
+// story title. Stays compact even when the list grows to 10+.
+function renderStorySelector() {
+  if (!storySelectorWrap) return;
+  const options = stories.map((s, i) =>
+    `<option value="${i}"${i === currentStoryIndex ? ' selected' : ''}>${s.title}</option>`
+  ).join('');
+  storySelectorWrap.innerHTML = `
+    <label class="story-selector-label" for="story-selector">Story</label>
+    <select class="story-selector" id="story-selector" aria-label="Choose a story">${options}</select>
+  `;
+  const sel = document.getElementById('story-selector');
+  sel.addEventListener('change', e => setStory(parseInt(e.target.value, 10)));
+}
+
+function setStory(index) {
+  if (index === currentStoryIndex) return;
+  currentStoryIndex = index;
+  renderScene();
+  renderStory();
+  attachSceneListeners();
+  resetPanel();
+}
+
 // ── Scene rendering ──────────────────────────────────────────
-// Each story names a builder; the builder returns inline SVG markup.
+// The current story names a builder; the builder returns inline SVG.
 function renderScene() {
-  const story = stories[0];
+  const story = stories[currentStoryIndex];
   const build = story && sceneBuilders[story.sceneBuilder];
-  if (!build) { sceneContainer.style.display = 'none'; return; }
+  if (!build) { sceneContainer.style.display = 'none'; sceneContainer.innerHTML = ''; return; }
+  sceneContainer.style.display = '';
   sceneContainer.innerHTML = build();
 }
 
@@ -89,9 +188,11 @@ function attachSceneListeners() {
   });
 }
 
-// ── Render stories ───────────────────────────────────────────
-function renderStories() {
-  storyContainer.innerHTML = stories.map(story => `
+// ── Render the current story ─────────────────────────────────
+function renderStory() {
+  const story = stories[currentStoryIndex];
+  if (!story) { storyContainer.innerHTML = ''; return; }
+  storyContainer.innerHTML = `
     <article class="story" id="story-${story.id}">
       <div class="story-meta">
         <span class="story-scene">${story.scene}</span>
@@ -101,7 +202,7 @@ function renderStories() {
         <p class="story-sentence">${story.sentences.map(s => parseStory(s)).join(' ')}</p>
       </div>
     </article>
-  `).join('');
+  `;
 
   document.querySelectorAll('.story-word').forEach(el => {
     const word = el.dataset.word;
@@ -352,11 +453,170 @@ const sceneBuilders = {
     </g>
     <text class="obj-label" x="660" y="358" text-anchor="middle">knife</text>
   </svg>`,
+
+  clinic: () => `
+  <svg viewBox="0 0 960 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive clinic scene with clickable door, bed, chair, mask, thermometer and phone">
+    <defs>
+      <linearGradient id="clinicWall" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f4f8fb"/>
+        <stop offset="1" stop-color="#e3edf3"/>
+      </linearGradient>
+      <linearGradient id="clinicFloor" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#d6dde2"/>
+        <stop offset="1" stop-color="#bcc6cd"/>
+      </linearGradient>
+      <linearGradient id="clinicSun" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
+        <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="bedPad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e9f0f6"/>
+        <stop offset="1" stop-color="#c9d6e0"/>
+      </linearGradient>
+      <linearGradient id="bedSheet" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset="1" stop-color="#e8eef3"/>
+      </linearGradient>
+      <linearGradient id="doorGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e8ddc8"/>
+        <stop offset="1" stop-color="#cdb98f"/>
+      </linearGradient>
+      <linearGradient id="maskGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#bfe2ff"/>
+        <stop offset="1" stop-color="#7eb5e0"/>
+      </linearGradient>
+      <linearGradient id="phoneGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#2c2c30"/>
+        <stop offset="1" stop-color="#101012"/>
+      </linearGradient>
+      <linearGradient id="thermoFill" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#d33a3a"/>
+        <stop offset="1" stop-color="#f08585"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Wall + floor -->
+    <rect x="0" y="0"   width="960" height="380" fill="url(#clinicWall)"/>
+    <rect x="0" y="380" width="960" height="160" fill="url(#clinicFloor)"/>
+    <line x1="0" y1="380" x2="960" y2="380" stroke="#9ba8b3" stroke-width="1.4" opacity="0.5"/>
+
+    <!-- Soft window light from top-left -->
+    <polygon points="0,80 220,80 380,420 0,420" fill="url(#clinicSun)" opacity="0.65"/>
+
+    <!-- Wall-mounted clock (decorative, non-interactive) -->
+    <g opacity="0.85">
+      <circle cx="700" cy="120" r="34" fill="#ffffff" stroke="#9ba8b3" stroke-width="2"/>
+      <circle cx="700" cy="120" r="2.5" fill="#1a1a1a"/>
+      <line x1="700" y1="120" x2="700" y2="98"  stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="700" y1="120" x2="716" y2="120" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+    </g>
+
+    <!-- Wall-mounted poster / medical cross (decorative) -->
+    <g opacity="0.9">
+      <rect x="60" y="80" width="90" height="120" rx="4" fill="#ffffff" stroke="#9ba8b3" stroke-width="1.5"/>
+      <rect x="92" y="108" width="26" height="64" rx="3" fill="#e74c4c"/>
+      <rect x="73" y="127" width="64" height="26" rx="3" fill="#e74c4c"/>
+    </g>
+
+    <!-- Floor shadow under bed + chair -->
+    <ellipse cx="480" cy="510" rx="360" ry="10" fill="#000" opacity="0.07"/>
+
+    <!-- DOOR (interactive) -->
+    <g id="obj-door" class="interactive-object" data-word="door" role="button" tabindex="0" aria-label="door">
+      <rect x="820" y="180" width="110" height="220" rx="3" fill="url(#doorGrad)" stroke="#8c7654" stroke-width="1.6"/>
+      <rect x="830" y="194" width="42"  height="78"  rx="2" fill="#b89c70" opacity="0.45"/>
+      <rect x="878" y="194" width="42"  height="78"  rx="2" fill="#b89c70" opacity="0.45"/>
+      <rect x="830" y="282" width="42"  height="100" rx="2" fill="#b89c70" opacity="0.45"/>
+      <rect x="878" y="282" width="42"  height="100" rx="2" fill="#b89c70" opacity="0.45"/>
+      <circle cx="908" cy="296" r="3.5" fill="#3b2a14"/>
+    </g>
+    <text class="obj-label" x="875" y="174" text-anchor="middle">door</text>
+
+    <!-- BED (interactive exam bed) -->
+    <g id="obj-bed" class="interactive-object" data-word="bed" role="button" tabindex="0" aria-label="exam bed">
+      <!-- frame -->
+      <rect x="300" y="332" width="360" height="14" rx="3" fill="#7d8a93"/>
+      <!-- pad -->
+      <rect x="306" y="300" width="348" height="38" rx="6" fill="url(#bedPad)" stroke="#8da0ab" stroke-width="1"/>
+      <!-- sheet draped over -->
+      <rect x="316" y="296" width="328" height="14" rx="3" fill="url(#bedSheet)" stroke="#c5d2db" stroke-width="0.8"/>
+      <!-- pillow at head (left side) -->
+      <rect x="320" y="286" width="84" height="22" rx="6" fill="#ffffff" stroke="#c5d2db" stroke-width="1"/>
+      <!-- legs -->
+      <rect x="314" y="346" width="10" height="68" rx="2" fill="#5d6970"/>
+      <rect x="636" y="346" width="10" height="68" rx="2" fill="#5d6970"/>
+      <!-- rolled paper sheet hanging off the right end -->
+      <path d="M644 312 q14 6 12 22 q-2 10 -10 14" fill="none" stroke="#c5d2db" stroke-width="1.2"/>
+    </g>
+    <text class="obj-label" x="480" y="282" text-anchor="middle">bed</text>
+
+    <!-- CHAIR (waiting / exam chair — interactive) -->
+    <g id="obj-chair" class="interactive-object" data-word="chair" role="button" tabindex="0" aria-label="chair">
+      <!-- back -->
+      <rect x="180" y="232" width="60" height="140" rx="6" fill="#5c7a96"/>
+      <rect x="186" y="244" width="48" height="8"  rx="3" fill="#3f5a73" opacity="0.55"/>
+      <!-- seat -->
+      <rect x="166" y="372" width="88" height="18" rx="4" fill="#6a89a5"/>
+      <rect x="166" y="386" width="88" height="4"  fill="#3f5a73" opacity="0.45"/>
+      <!-- legs -->
+      <rect x="174" y="390" width="8" height="60" rx="2" fill="#3f5a73"/>
+      <rect x="238" y="390" width="8" height="60" rx="2" fill="#3f5a73"/>
+    </g>
+    <text class="obj-label" x="210" y="226" text-anchor="middle">chair</text>
+
+    <!-- TEMPERATURE (thermometer — interactive) -->
+    <g id="obj-temperature" class="interactive-object" data-word="temperature" role="button" tabindex="0" aria-label="thermometer">
+      <!-- shaft -->
+      <rect x="494" y="252" width="12" height="48" rx="5" fill="#ffffff" stroke="#9aa0a6" stroke-width="1.2"/>
+      <!-- mercury fill -->
+      <rect x="497" y="266" width="6" height="34" fill="url(#thermoFill)"/>
+      <!-- bulb -->
+      <circle cx="500" cy="306" r="10" fill="url(#thermoFill)" stroke="#9aa0a6" stroke-width="1"/>
+      <!-- tick marks -->
+      <line x1="510" y1="262" x2="516" y2="262" stroke="#5c6770" stroke-width="1"/>
+      <line x1="510" y1="272" x2="516" y2="272" stroke="#5c6770" stroke-width="1"/>
+      <line x1="510" y1="282" x2="516" y2="282" stroke="#5c6770" stroke-width="1"/>
+      <line x1="510" y1="292" x2="516" y2="292" stroke="#5c6770" stroke-width="1"/>
+    </g>
+    <text class="obj-label" x="500" y="246" text-anchor="middle">temperature</text>
+
+    <!-- MASK (surgical mask on bedside — interactive) --> # Note: wrong sign of Mask.
+    <g id="obj-mask" class="interactive-object" data-word="mask" role="button" tabindex="0" aria-label="surgical mask">
+      <!-- ear loops -->
+      <path d="M555 350 q-12 8 -2 24" fill="none" stroke="#7d909c" stroke-width="1.4"/>
+      <path d="M615 350 q12 8 2 24"   fill="none" stroke="#7d909c" stroke-width="1.4"/>
+      <!-- body -->
+      <path d="M555 348 q30 -10 60 0 v22 q-30 10 -60 0 z" fill="url(#maskGrad)" stroke="#5d8aae" stroke-width="1.2"/>
+      <!-- pleats -->
+      <line x1="558" y1="355" x2="612" y2="357" stroke="#5d8aae" stroke-width="0.7" opacity="0.65"/>
+      <line x1="558" y1="361" x2="612" y2="363" stroke="#5d8aae" stroke-width="0.7" opacity="0.65"/>
+      <line x1="558" y1="367" x2="612" y2="369" stroke="#5d8aae" stroke-width="0.7" opacity="0.65"/>
+    </g>
+    <text class="obj-label" x="585" y="392" text-anchor="middle">mask</text>
+
+    <!-- PHONE (on bedside table — interactive) -->
+    <g id="obj-phone" class="interactive-object" data-word="phone" role="button" tabindex="0" aria-label="phone">
+      <!-- bedside surface under it -->
+      <rect x="690" y="368" width="86" height="6" rx="2" fill="#8a96a0" opacity="0.6"/>
+      <!-- phone body -->
+      <rect x="708" y="320" width="50" height="48" rx="6" fill="url(#phoneGrad)" stroke="#0a0a0c" stroke-width="1"/>
+      <!-- screen -->
+      <rect x="713" y="326" width="40" height="36" rx="3" fill="#3b4a73"/>
+      <!-- typed text lines (callback to the story moment) -->
+      <line x1="717" y1="334" x2="749" y2="334" stroke="#ffffff" stroke-width="1" opacity="0.55"/>
+      <line x1="717" y1="340" x2="745" y2="340" stroke="#ffffff" stroke-width="1" opacity="0.45"/>
+      <line x1="717" y1="346" x2="749" y2="346" stroke="#ffffff" stroke-width="1" opacity="0.35"/>
+      <!-- speaker slit -->
+      <rect x="725" y="323" width="16" height="1.6" rx="0.8" fill="#0a0a0c"/>
+    </g>
+    <text class="obj-label" x="733" y="314" text-anchor="middle">phone</text>
+  </svg>`,
 };
 
 // ── Init (runs last; sceneBuilders is now defined) ──────────
+renderStorySelector();
 renderScene();
-renderStories();
+renderStory();
 attachSceneListeners();
 resetPanel();
 dismissBtn.addEventListener('click', resetPanel);

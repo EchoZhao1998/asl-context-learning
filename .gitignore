@@ -6,3 +6,8 @@ WLASL_v0.3.json
 
 # Editor
 .vscode/
+
+# Node — jsdom is installed locally only for scripts/test-doctor-story.js
+node_modules/
+package-lock.json
+package.json

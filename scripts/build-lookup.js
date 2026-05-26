@@ -13,10 +13,16 @@ const path = require('path');
 
 // ── Add new words here as you expand the scene ──────────────────────────────
 const VOCAB_WORDS = [
-  // Scene objects
+  // Kitchen story — scene objects
   'apple', 'chair', 'table', 'glass', 'knife',
-  // Story words
+  // Kitchen story — story words
   'kitchen', 'hungry', 'water', 'morning', 'eat', 'drink', 'food', 'cup', 'bread',
+  // Doctor story — coverable words (43 from lint-story.js)
+  'doctor', 'sit', 'tall', 'quiet', 'hospital', 'room', 'feel', 'very', 'sick',
+  'tired', 'today', 'keep', 'eyes', 'door', 'because', 'cannot', 'hear', 'name',
+  'soon', 'nurse', 'call', 'enter', 'deaf', 'down', 'see', 'temperature',
+  'explain', 'bad', 'winter', 'cold', 'go', 'home', 'warm', 'rest',
+  'comfortable', 'bed', 'type', 'phone', 'visit', 'safe',
 ];
 
 const ROOT      = path.join(__dirname, '..');

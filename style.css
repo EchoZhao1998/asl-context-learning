@@ -128,6 +128,42 @@ main {
   padding: 24px 44px 36px;
 }
 
+/* Story switcher — sits at the top of the story column */
+.story-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 560px;
+  margin-bottom: 18px;
+}
+
+.story-selector-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.story-selector {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.story-selector:hover,
+.story-selector:focus {
+  border-color: var(--highlight);
+  outline: none;
+}
+
 .story {
   max-width: 560px;
 }

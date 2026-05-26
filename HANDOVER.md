@@ -17,7 +17,7 @@ An interactive web app for **late-deafened adult ESL learners** to learn ASL sig
 
 ---
 
-## Current state (as of 2026-05-25 — end of Session 4)
+## Current state (as of 2026-05-26 — "At the Doctor" built)
 
 Repo is clean. Session 4's three build tasks are done and committed:
 
@@ -99,54 +99,58 @@ Echo reviewed the Gemini-backdrop version and flagged two issues. We acted on bo
 
 ---
 
-## ▶ Next chat — "At the Doctor" story build (2026-05-26)
+## Session 5 — "At the Doctor" built (2026-05-26)
 
-Echo drafted the second story in `stories.md` and ran the linter. Build is a discrete chunk; hand to a fresh chat.
+Second story shipped. Multi-story switcher added. Both stories live side-by-side, picked from a `<select>` at the top of the story column.
 
-### Source material
-Echo's draft is at `stories.md`. It is personal, deaf-experience-specific — the line *"the kind doctor pulls down her **mask** so I can see her lips"* is the differentiation moment vs. VL2-style apps. Preserve that.
+### What got built
+- **`stories` array** now has two entries. The doctor story is 11 sentences; every coverable word from the lint run is wrapped in `{...}` so it's clickable, plus the three deaf-experience-specific words `mask`, `lips`, `sentences` (the differentiation moment). Sentence-initial words that would need capitalization (`Soon`, `Because`, `She`, `I`, `This`) are left un-bracketed.
+- **`vocabularyMap`** extended with 43 new entries: 40 WLASL-covered + 3 fingerspell-only (`mask`, `lips`, `sentences`, all marked `fingerspellOnly: true`). All clickable in the prose; the three fingerspell-only ones still get the `.has-sign` blue underline and surface the fingerspell strip on click (video panel shows "not in WLASL dataset" — honest fallback).
+- **`VOCAB_WORDS`** in `scripts/build-lookup.js` extended with the 40 coverable words; `wlasl-urls.js` regenerated (now ~36KB, all 40 resolved with 6–18 mp4 URLs each).
+- **`sceneBuilders.clinic`** added. 6 interactive objects keyed to story words: `door`, `bed`, `chair`, `temperature` (thermometer), `mask`, `phone`. Same visual register as the kitchen — gradients (wall, floor, bed pad/sheet, door, mask, phone, thermometer mercury), soft window light, floor shadow, hover-glow, labels above each object. Decorative non-interactive elements: wall clock and a medical-cross poster.
+- **Multi-story switcher (smallest viable):** `<select id="story-selector">` rendered by `renderStorySelector()` at the top of `.story-panel`. Changing it calls `setStory(i)` which updates `currentStoryIndex`, re-renders the scene and narration, re-wires listeners, and resets the info panel.
+- **`renderScene()` and `renderStories()` → `renderStory()`** are now parameterized by `currentStoryIndex` instead of being hard-coded to `stories[0]`. Only one story renders at a time.
 
-### Linter run (already done — `node scripts/lint-story.js stories.md`)
-- **43 coverable** (74%): `doctor, sit, tall, chair, quiet, hospital, room, feel, very, sick, tired, today, keep, eyes, door, because, cannot, hear, name, soon, nurse, call, enter, deaf, down, see, temperature, explain, bad, winter, cold, go, home, drink, warm, water, rest, comfortable, bed, type, phone, visit, safe`
-- **0 gloss-only**
-- **15 fingerspell** (26%): `waves, hand, kind, pulls, mask, lips, checks, writes, sentences, notepad, tells, immediately, thank, visual, makes` — these will show as letter tiles (or handshapes once `assets/fingerspell/` is filled). **`mask` is fine as fingerspell** — it's a daily-life word deaf learners benefit from spelling.
+### Verification
+`node scripts/test-doctor-story.js` — new jsdom test, all assertions pass:
+- Selector populated with both stories
+- Kitchen renders by default; switching to doctor re-renders scene + narration
+- Clinic SVG exposes exactly the 6 expected interactive objects
+- 28 prose words verified clickable (incl. `mask`, `lips`, `sentences`)
+- Clicking a scene object surfaces `info-active` with the correct word title
+- Clicking a fingerspell-only word (`mask`) sets word title + fingerspell tiles + "not in WLASL dataset" video note
+- Switching back to kitchen restores the original SVG and title
 
-### Build steps
-1. Convert the draft prose in `stories.md` to a `{word}`-bracketed `sentences` array. Decide which words to make clickable in the prose (every coverable word + the fingerspell ones that carry the story — at minimum `mask`, `lips`, `sentences`).
-2. Add an entry to `stories` in `app.js`:
-   ```js
-   {
-     id: 'at-the-doctor',
-     title: 'At the Doctor',
-     scene: 'Health · Clinic',
-     sceneBuilder: 'clinic',          // or 'doctorOffice'
-     sentences: [ ... ]
-   }
-   ```
-3. Add new words to `vocabularyMap` in `app.js` **and** to `VOCAB_WORDS` in `scripts/build-lookup.js` (paste the list above).
-4. Run `node scripts/build-lookup.js` to regenerate `wlasl-urls.js`.
-5. **Write the new scene builder** under `sceneBuilders` in `app.js`. Suggested 5–6 interactive objects to surface story words on the scene: `chair` (waiting/exam chair), `bed` (exam bed), `door`, `mask`, `phone`, maybe `temperature` (thermometer). Aim for the same visual register as the kitchen — gradients, soft shadow, hover-glow, labels above each object. Keep `viewBox="0 0 960 540"`.
-6. Add a small UI affordance to switch between stories (currently `renderScene()` only uses `stories[0]`). Simplest: a dropdown or two buttons in the story header. This is a small but new piece.
-7. Verify with jsdom (extend the test pattern from prior sessions).
-8. Commit. Update `HANDOVER.md` Phase 1 / file map / vocabulary sections.
+### Decisions made (formerly "open" in the prior handover)
+- **Multi-story navigation:** chose `<select>` dropdown over tabs/columns. Stays compact past 3+ stories. Lives at the top of `.story-panel`.
+- **`mask`/`lips`/`sentences` clickability:** included as `fingerspellOnly: true` entries in `vocabularyMap`. They render as `.has-sign` (blue underline) and surface the fingerspell strip on click. The video note explains they're not in WLASL — this is honest and pedagogically correct.
+- **26 handshape images:** still deferred. The fingerspell strip auto-upgrades the moment `a.png … z.png` land in `assets/fingerspell/`.
 
-### Open decisions for the new chat
-- **Multi-story navigation:** dropdown above the story, or tabs, or two visible columns? Smallest viable first.
-- **`mask` and `lips` clickability:** include in the prose as fingerspell-only words (they'll show no video but the strip will spell them), or skip them? Recommend include — they're the differentiation moment.
-- **Whether to add 26 handshape images now**, so `mask`/`lips`/etc. spell with actual handshapes from day one of the doctor story (otherwise they'll show letter glyphs).
-
-### Hand to the new chat
-Paste this section + `HANDOVER.md` + `git log --oneline -10`.
+### Still open
+- **Sentence-initial clickability** (`Soon`, `Because`): currently un-bracketed because the `{...}` parser is case-sensitive and `vocabularyMap` keys are lowercase. Acceptable for now — small loss. Fix later by lowercasing inside `parseStory` before the lookup, or by tagging the first letter separately.
+- **Long-run scene art** still TBD past ~3–4 stories (per Session 4 note). The clinic is hand-built; adding a third scene by hand is fine, but a fourth pushes the limit.
+- **`ASL.webp` copyright** still unresolved — same as before, swap before public deploy.
 
 ---
 
-## Vocabulary & current story
+## Vocabulary & stories
 
-**Vocabulary (14 words):**
+**Vocabulary (57 words across two stories):**
+
+Kitchen story (14 words):
 - Scene (clickable in the SVG): `apple`, `chair`, `cup`, `glass`, `knife`, `table`
-- Story-only (clickable as underlined words in the prose): `bread`, `drink`, `eat`, `food`, `hungry`, `kitchen`, `morning`, `water`
+- Story-only: `bread`, `drink`, `eat`, `food`, `hungry`, `kitchen`, `morning`, `water`
 
-**Current story:** "A Morning in the Kitchen" — 5 sentences. Every vocab word now appears in the story prose (so each is clickable in at least one place; the six scene objects are clickable in both places).
+Doctor story (43 new words):
+- Scene (clickable in the SVG): `bed`, `chair` (shared), `door`, `mask`*, `phone`, `temperature`
+- Story-only (WLASL-covered): `doctor`, `sit`, `tall`, `quiet`, `hospital`, `room`, `feel`, `very`, `sick`, `tired`, `today`, `keep`, `eyes`, `because`, `cannot`, `hear`, `name`, `nurse`, `call`, `enter`, `deaf`, `down`, `see`, `explain`, `bad`, `winter`, `cold`, `go`, `home`, `warm`, `rest`, `comfortable`, `type`, `visit`, `safe`
+- Story-only (fingerspell-only, `fingerspellOnly: true`): `lips`*, `sentences`*
+
+\* The differentiation moment vs. VL2-style apps: *"the kind doctor pulls down her **mask** so I can see her **lips**. She writes **sentences** on a notepad."*
+
+**Stories:**
+1. "A Morning in the Kitchen" — 5 sentences. `sceneBuilder: 'kitchen'`.
+2. "At the Doctor" — 11 sentences. `sceneBuilder: 'clinic'`.
 
 **How video loading works:** `tryVideoUrls(word)` walks through `WLASL_URLS[word]` silently, skipping CORS/404 failures until one plays. A note is shown only on total failure.
 
@@ -180,12 +184,13 @@ Paste this section + `HANDOVER.md` + `git log --oneline -10`.
 - [x] Session 4 tasks 1–3 — fingerspell strip, × dismiss, scene work (done 2026-05-25)
 - [x] Session 4 follow-up — revert to SVG scene, 60/40 layout, alphabet modal (done 2026-05-26)
 - [x] Surface `cup` in the scene + story (done in revert)
-- [ ] Swap `ASL.png` for a CC/public-domain chart (or render our own) — required before public deploy
+- [x] Second story: "At the Doctor" + clinic scene + story switcher (done 2026-05-26)
+- [ ] Swap `ASL.webp` for a CC/public-domain chart (or render our own) — required before public deploy
 - [ ] Add handshape images `a.png … z.png` to `assets/fingerspell/` — upgrades the per-letter strip to real handshapes
-- [ ] Add 1–2 more stories. Workflow now: draft narration → `node scripts/lint-story.js draft.txt` → add to `vocabularyMap` + `stories` array + `VOCAB_WORDS` → run `build-lookup.js` → **write a new SVG `sceneBuilders` entry** for the scene.
+- [ ] Third story (kicks the scene-art scaling question). Workflow: draft narration → `node scripts/lint-story.js draft.txt` → add to `vocabularyMap` + `stories` array + `VOCAB_WORDS` → run `build-lookup.js` → **write a new SVG `sceneBuilders` entry**.
 - [ ] Long-run scene-art approach (3+ stories) — ask peers/professors
 - [ ] GitHub Pages deployment
-- [ ] Test video playback across all 14 words; note persistent failures
+- [ ] Test video playback across all 54 WLASL-covered words; note persistent failures
 - [ ] Add a loading spinner while video tries sources
 
 ### Phase 2 — Smart fallback for unknown words
@@ -229,21 +234,24 @@ If a clicked word is NOT in WLASL, trigger a fingerspelling engine (CSS cross-fa
 
 ```
 asl-context-learning/
-├── index.html              ← layout + alphabet modal
-├── style.css               ← all styling
-├── app.js                  ← all logic (vocabularyMap, stories, sceneBuilders, fingerspell, modal, video)
+├── index.html              ← layout + alphabet modal + story-selector mount point
+├── style.css               ← all styling (incl. .story-selector)
+├── app.js                  ← all logic (vocabularyMap, stories, sceneBuilders {kitchen, clinic},
+│                              story switcher, fingerspell, modal, video)
 ├── wlasl-urls.js           ← AUTO-GENERATED — run build-lookup.js, do not edit
 ├── WLASL_v0.3.json         ← local only, gitignored, never push to GitHub
+├── stories.md              ← author-first draft scratchpad (lint with scripts/lint-story.js)
 ├── HANDOVER.md             ← this file — update every session
 ├── .gitignore
 ├── assets/
-│   ├── image/              ← ASL.png (alphabet chart, used by modal) + home-kitchen.png (unused after revert)
+│   ├── image/              ← ASL.webp (alphabet chart, used by modal) + home-kitchen.png (unused after revert)
 │   ├── fingerspell/        ← drop a.png … z.png here → tiles auto-upgrade to handshapes
 │   ├── videos/             ← local mp4 fallback (optional, empty)
 │   └── svgs/               ← spare folder (empty)
 └── scripts/
     ├── build-lookup.js     ← run after adding new words
-    └── lint-story.js       ← run on a draft to see WLASL coverage (author-first)
+    ├── lint-story.js       ← run on a draft to see WLASL coverage (author-first)
+    └── test-doctor-story.js ← jsdom verification (run `node scripts/test-doctor-story.js`)
 ```
 
 ---
