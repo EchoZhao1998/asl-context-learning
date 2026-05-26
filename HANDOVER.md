@@ -91,13 +91,52 @@ Echo reviewed the Gemini-backdrop version and flagged two issues. We acted on bo
 - Strip note updated: "Don't know the handshapes yet? Open the chart below."
 
 ### Carried forward / still open
-- **⚠ `ASL.png` is copyright-watermarked ("Gérard Aflague Collection").** Fine for prototype/demo. **Before public GitHub Pages deployment**, swap to a CC/public-domain ASL alphabet chart (Wikimedia Commons has several), link out instead of embedding, or use the 26 handshape images we render ourselves.
-- **`ASL.png` is actually a WebP file** with a `.png` extension. Browsers handle it, but consider renaming to `.webp` for honesty, or convert to true PNG.
+- **⚠ `ASL.webp` is copyright-watermarked ("Gérard Aflague Collection").** Echo renamed the extension from `.png` to `.webp` (it was always WebP bytes); `index.html` now references `assets/image/ASL.webp`. The IP issue is *unchanged* — fine for prototype/demo, but **before public GitHub Pages deployment** swap to a CC/public-domain ASL alphabet chart (Wikimedia Commons has several), link out instead of embedding, or render our own from the 26 handshape images.
 - **Handshape images:** drop `a.png … z.png` into `assets/fingerspell/` to upgrade the per-letter strip from glyphs to handshapes (no code change needed).
 - **Old `home-kitchen.png` is unused** post-revert. Keep for reference or `git rm`.
-- **Second story topic:** "At the Doctor" (strong accessibility angle) vs. "Going to School". Linter already validated an "At the Doctor…" draft. Each new story now also needs **its own scene builder** in `app.js` (`sceneBuilders.atTheDoctor = () => \`<svg…>\``).
 - **Scene scaling beyond ~3 stories:** decide a long-run approach (peer/professor input).
-- **GitHub Pages deployment:** ready — `git push` + enable Pages, then add the URL to `ezhozhao.github.io`. Do the ASL.png swap first.
+- **GitHub Pages deployment:** ready — `git push` + enable Pages, then add URL to `ezhozhao.github.io`. Do the ASL chart swap first.
+
+---
+
+## ▶ Next chat — "At the Doctor" story build (2026-05-26)
+
+Echo drafted the second story in `stories.md` and ran the linter. Build is a discrete chunk; hand to a fresh chat.
+
+### Source material
+Echo's draft is at `stories.md`. It is personal, deaf-experience-specific — the line *"the kind doctor pulls down her **mask** so I can see her lips"* is the differentiation moment vs. VL2-style apps. Preserve that.
+
+### Linter run (already done — `node scripts/lint-story.js stories.md`)
+- **43 coverable** (74%): `doctor, sit, tall, chair, quiet, hospital, room, feel, very, sick, tired, today, keep, eyes, door, because, cannot, hear, name, soon, nurse, call, enter, deaf, down, see, temperature, explain, bad, winter, cold, go, home, drink, warm, water, rest, comfortable, bed, type, phone, visit, safe`
+- **0 gloss-only**
+- **15 fingerspell** (26%): `waves, hand, kind, pulls, mask, lips, checks, writes, sentences, notepad, tells, immediately, thank, visual, makes` — these will show as letter tiles (or handshapes once `assets/fingerspell/` is filled). **`mask` is fine as fingerspell** — it's a daily-life word deaf learners benefit from spelling.
+
+### Build steps
+1. Convert the draft prose in `stories.md` to a `{word}`-bracketed `sentences` array. Decide which words to make clickable in the prose (every coverable word + the fingerspell ones that carry the story — at minimum `mask`, `lips`, `sentences`).
+2. Add an entry to `stories` in `app.js`:
+   ```js
+   {
+     id: 'at-the-doctor',
+     title: 'At the Doctor',
+     scene: 'Health · Clinic',
+     sceneBuilder: 'clinic',          // or 'doctorOffice'
+     sentences: [ ... ]
+   }
+   ```
+3. Add new words to `vocabularyMap` in `app.js` **and** to `VOCAB_WORDS` in `scripts/build-lookup.js` (paste the list above).
+4. Run `node scripts/build-lookup.js` to regenerate `wlasl-urls.js`.
+5. **Write the new scene builder** under `sceneBuilders` in `app.js`. Suggested 5–6 interactive objects to surface story words on the scene: `chair` (waiting/exam chair), `bed` (exam bed), `door`, `mask`, `phone`, maybe `temperature` (thermometer). Aim for the same visual register as the kitchen — gradients, soft shadow, hover-glow, labels above each object. Keep `viewBox="0 0 960 540"`.
+6. Add a small UI affordance to switch between stories (currently `renderScene()` only uses `stories[0]`). Simplest: a dropdown or two buttons in the story header. This is a small but new piece.
+7. Verify with jsdom (extend the test pattern from prior sessions).
+8. Commit. Update `HANDOVER.md` Phase 1 / file map / vocabulary sections.
+
+### Open decisions for the new chat
+- **Multi-story navigation:** dropdown above the story, or tabs, or two visible columns? Smallest viable first.
+- **`mask` and `lips` clickability:** include in the prose as fingerspell-only words (they'll show no video but the strip will spell them), or skip them? Recommend include — they're the differentiation moment.
+- **Whether to add 26 handshape images now**, so `mask`/`lips`/etc. spell with actual handshapes from day one of the doctor story (otherwise they'll show letter glyphs).
+
+### Hand to the new chat
+Paste this section + `HANDOVER.md` + `git log --oneline -10`.
 
 ---
 
