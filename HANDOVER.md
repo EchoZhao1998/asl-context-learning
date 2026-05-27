@@ -17,7 +17,7 @@ An interactive web app for **late-deafened adult ESL learners** to learn ASL sig
 
 ---
 
-## Current state (as of 2026-05-26 — "At the Doctor" built)
+## Current state (as of 2026-05-27 — "At the Doctor" built, Gemini collab plan locked, scenario series next)
 
 Repo is clean. Session 4's three build tasks are done and committed:
 
@@ -130,6 +130,65 @@ Second story shipped. Multi-story switcher added. Both stories live side-by-side
 - **Sentence-initial clickability** (`Soon`, `Because`): currently un-bracketed because the `{...}` parser is case-sensitive and `vocabularyMap` keys are lowercase. Acceptable for now — small loss. Fix later by lowercasing inside `parseStory` before the lookup, or by tagging the first letter separately.
 - **Long-run scene art** still TBD past ~3–4 stories (per Session 4 note). The clinic is hand-built; adding a third scene by hand is fine, but a fourth pushes the limit.
 - **`ASL.webp` copyright** still unresolved — same as before, swap before public deploy.
+
+---
+
+## Session 5 follow-up — Gemini collaboration plan (2026-05-27)
+
+Echo brought a Gemini-authored refactor proposal (`Portofilo/Gemini5.md`). Proposal: replace hand-built SVG scenes with a flat 16:9 background image + absolutely-positioned invisible HTML hotspot buttons (the "Invisible Hotspot Grid"). The architecture is sound and is the standard scalable answer to the scene-art ceiling, BUT we did not apply it. Two reasons recorded:
+
+1. **It silently reverts Session 4's deliberate choice** (commit `38192fb`). The Gemini-raster backdrop was rejected because it read VL2/Gallaudet-style and lost the hover-to-glow demo moment (the 30-second hook for hiring-manager outreach). Gemini hadn't read this HANDOVER, so its proposal re-introduces what we rejected. Decision must be made consciously, not by drift.
+2. **Invisible hotspots = no visible affordance.** A first-time visitor who doesn't hover over the right pixels sees a static picture. The proposal's hover-border is not enough. If we adopt the architecture, it MUST come with visible affordances (numbered pins / pulsing dots / shimmer-on-load) — otherwise we trade away the demo moment.
+
+Also flagged in the proposal:
+- Hotspot coordinates are hallucinations (images don't exist yet — every coord will need hand-calibration after PNGs are generated).
+- The "Tiered Fallback Engine" copy is marketing-ish, not honest (`"Fluid sign unavailable. Displaying fingerspelling sequence engine fallback."` — there is no engine, only the existing static letter strip). Strip and rewrite in Echo's voice if adopting.
+- No new fallback behavior actually added — it's a relabel of what exists.
+- Test (`scripts/test-doctor-story.js`) asserts `.interactive-object` and `<svg>` — will break and needs updating.
+
+### Collaboration model — lanes, not mixed
+- **Gemini:** scene art (image generation), scenario drafts, image-generation prompts. Multimodal generation is its actual strength.
+- **Claude:** code refactors, tests, HANDOVER discipline, calling out when a proposal contradicts a past decision. Persistent project memory lives here, not in Gemini.
+- **Echo:** author + arbiter. When the two AIs disagree, you decide.
+- **Rule:** Gemini code/architecture proposals are *briefs*, not patches. They go to Claude, get checked against HANDOVER + tests + past decisions, then execute. Mixing Gemini into the code lane causes silent reversions like Session 4-redux.
+
+### Scenario tone rules (locked from the doctor draft — give to Gemini before drafting)
+- First-person ("I sit...", "I feel...", "I keep my eyes on the door...")
+- Factual, matter-of-fact register. The friction moment is described without emphasis (e.g. "the kind doctor pulls down her mask so I can see her lips" — no italics, no exclamation, no narration about how kind that was).
+- Ends in agency or neutrality. *NOT* in tragedy, gratitude-to-the-hearing-person, or moral lesson. The doctor story ends in "safe" — Echo's word, Echo's frame.
+- No inspiration porn. If a hearing reader feels admiration or pity, the draft has slipped. The goal is the *window*, not the lesson.
+- A vocabulary cluster per scenario — each scenario teaches a coherent semantic neighborhood (medical, transit, food-service, work, emergency, intimate-relational).
+
+---
+
+## ▶ Next chat — Scenario series + flat-image refactor (Session 6)
+
+Discrete chunk. Hand to a fresh chat with this HANDOVER + `git log --oneline -10` + the inputs below.
+
+### Inputs needed before code starts
+1. **4–6 scenario drafts** authored with Gemini, edited by Echo to match the tone rules above. Drop into `stories.md` (or new `scenarios.md`). Doctor is #1 done; suggested next set: airport / restaurant / job interview / phone call / ER. Stop at 6.
+2. **One Gemini-generated PNG per scenario** in `assets/scenes/{id}.png`. 16:9 aspect ratio, ~1920×1080 or similar. Visual register: cleaner than the Session 4 attempt — flatter, more Swiss/illustrative, less "comic-book." Gemini prompt should specify "minimalist Swiss illustration, soft lighting, no human figures (or stylized silhouettes only), recognizable scene objects."
+3. **Lint each draft:** `node scripts/lint-story.js scenarios.md` → captures coverable / fingerspell breakdown per story.
+
+### Open decisions to nail down BEFORE the refactor
+- **Demo affordance:** numbered pins on each hotspot? Pulsing dots? One-time shimmer animation on scene-load? Pick one. Without it, the architecture trades away the 30-second demo moment.
+- **Architecture scope:**
+  - *Option A — full flat-image refactor:* rebuild kitchen + clinic as PNGs too. Consistent, but throws away the polished SVGs.
+  - *Option B — hybrid:* keep kitchen + clinic SVGs as "hero" demo scenes; flat-image for scenarios 3-6. Preserves Session 4 + unlocks scale. (Claude recommends this.)
+- **Scenario authorship voice:** before Gemini drafts, paste the *Scenario tone rules* section above into the Gemini prompt verbatim. Edit every draft against those rules.
+
+### Build steps (once inputs are in and decisions locked)
+1. Decide demo affordance + which scenes get the flat-image treatment.
+2. Add `imgUrl` + `hotspots` fields to story objects. If hybrid: keep `sceneBuilder` field for kitchen + clinic; new scenes use the new fields.
+3. Refactor `renderScene()` to branch: if story has `sceneBuilder` → existing SVG path; if `imgUrl` + `hotspots` → new flat-image + hotspot-button path.
+4. CSS: add `.scene-wrapper` (16:9, `aspect-ratio: 16/9`), `.scene-img`, `.interactive-hotspot` per Gemini's CSS — BUT add the visible affordance (pins/dots/shimmer) decided above. Strip marketing-ish copy.
+5. Per-scenario: extend `vocabularyMap` + `VOCAB_WORDS`, regenerate `wlasl-urls.js`, calibrate hotspot percentage coords against the actual PNG (browser inspector → measure → paste in).
+6. Update `scripts/test-doctor-story.js` to cover both rendering paths (SVG path + hotspot path).
+7. Update HANDOVER: file map, vocabulary, roadmap, file map adds `assets/scenes/`.
+8. Commit per scenario or in one batch — Echo's call.
+
+### Goal for the MVP send-out
+4–6 scenarios live, fingerspell strip handling the long-tail vocab, GitHub Pages deployed, link sent to professors with a one-paragraph framing of the differentiation (adult deaf ESL learner, real-life friction moments, why this isn't VL2). Professors get to suggest what's missing or wrong.
 
 ---
 
