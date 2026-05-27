@@ -23,6 +23,15 @@ const VOCAB_WORDS = [
   'soon', 'nurse', 'call', 'enter', 'deaf', 'down', 'see', 'temperature',
   'explain', 'bad', 'winter', 'cold', 'go', 'home', 'warm', 'rest',
   'comfortable', 'bed', 'type', 'phone', 'visit', 'safe',
+  // Airport story — coverable words (Session 7)
+  'ticket', 'people', 'walk', 'write',
+  // Restaurant story — coverable words (Session 7)
+  'restaurant', 'family', 'chicken', 'order',
+  // Classroom story — coverable words (Session 7)
+  'class', 'teacher', 'group', 'project', 'computer', 'paper', 'question',
+  'help', 'read',
+  // Phone story — coverable words (Session 7)
+  'problem', 'bank', 'number', 'time', 'person',
 ];
 
 const ROOT      = path.join(__dirname, '..');

@@ -179,10 +179,73 @@ check('airport prose has clickable words', airportProseEls.length > 0,
   `got ${airportProseEls.length}`);
 const airportWords = Array.from(airportProseEls).map(el => el.dataset.word);
 check('"airport" rendered as clickable word', airportWords.includes('airport'));
-// "airport" is NOT in VOCABULARY yet — it should be .no-sign.
+
+// Session 7: airport vocab is wired. "airport" is fingerspell-only (no
+// WLASL entry, but in VOCABULARY) — should render .has-sign now.
 const airportEl = document.querySelector('.story-word[data-word="airport"]');
-check('"airport" carries .no-sign (no vocab entry yet)',
-  airportEl && airportEl.classList.contains('no-sign'));
+check('"airport" carries .has-sign (fingerspell-only vocab entry, S7)',
+  airportEl && airportEl.classList.contains('has-sign'));
+// "walk" is WLASL-covered and should also be .has-sign.
+const walkEl = document.querySelector('.story-word[data-word="walk"]');
+check('"walk" rendered as .has-sign (WLASL-covered, S7)',
+  walkEl && walkEl.classList.contains('has-sign'));
+
+// Click a WLASL-covered airport word: should NOT show the "not in WLASL"
+// fallback. The video-note transitions through "Loading…" while
+// tryVideoUrls walks the URL list.
+walkEl.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+check('clicking "walk" sets word-title to WALK',
+  document.getElementById('word-title').textContent === 'WALK');
+const walkNote = document.getElementById('video-note').textContent;
+check('clicking "walk" does NOT show "not in WLASL dataset" note',
+  !/not in WLASL dataset/i.test(walkNote),
+  `got: "${walkNote}"`);
+
+// Click a fingerspell-only airport word: should route to the fingerspell
+// strip + "not in WLASL" video note (same path as mask in Doctor).
+airportEl.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+check('clicking "airport" sets word-title to AIRPORT',
+  document.getElementById('word-title').textContent === 'AIRPORT');
+check('clicking "airport" shows fingerspell strip with 7 tiles',
+  document.querySelectorAll('#fingerspell-strip .fs-tile').length === 7);
+check('clicking "airport" shows "not in WLASL dataset" note',
+  /not in WLASL dataset/i.test(document.getElementById('video-note').textContent));
+
+console.log('\n— Switch to The Restaurant Dinner (S7 vocab) —');
+selector.value = '3';
+selector.dispatchEvent(new window.Event('change'));
+check('restaurant title shown',
+  document.querySelector('.story-title').textContent === 'The Restaurant Dinner');
+const restaurantEl = document.querySelector('.story-word[data-word="restaurant"]');
+check('"restaurant" rendered as .has-sign (WLASL-covered, S7)',
+  restaurantEl && restaurantEl.classList.contains('has-sign'));
+const menuEl = document.querySelector('.story-word[data-word="menu"]');
+check('"menu" rendered as .has-sign (fingerspell-only, S7)',
+  menuEl && menuEl.classList.contains('has-sign'));
+
+console.log('\n— Switch to The Classroom Group Project (S7 vocab) —');
+selector.value = '4';
+selector.dispatchEvent(new window.Event('change'));
+check('classroom title shown',
+  document.querySelector('.story-title').textContent === 'The Classroom Group Project');
+const teacherEl = document.querySelector('.story-word[data-word="teacher"]');
+check('"teacher" rendered as .has-sign (WLASL-covered, S7)',
+  teacherEl && teacherEl.classList.contains('has-sign'));
+const studentsEl = document.querySelector('.story-word[data-word="students"]');
+check('"students" rendered as .has-sign (fingerspell-only plural, S7)',
+  studentsEl && studentsEl.classList.contains('has-sign'));
+
+console.log('\n— Switch to The Automated Phone Barrier (S7 vocab) —');
+selector.value = '5';
+selector.dispatchEvent(new window.Event('change'));
+check('phone story title shown',
+  document.querySelector('.story-title').textContent === 'The Automated Phone Barrier');
+const problemEl = document.querySelector('.story-word[data-word="problem"]');
+check('"problem" rendered as .has-sign (WLASL-covered, S7)',
+  problemEl && problemEl.classList.contains('has-sign'));
+const questionsEl = document.querySelector('.story-word[data-word="questions"]');
+check('"questions" rendered as .has-sign (fingerspell-only plural, S7)',
+  questionsEl && questionsEl.classList.contains('has-sign'));
 
 console.log('\n— Switch back to kitchen —');
 selector.value = '0';
@@ -192,12 +255,22 @@ check('kitchen title back', document.querySelector('.story-title').textContent =
 check('scene container visible again',
   document.getElementById('scene-container').style.display !== 'none');
 
-console.log('\n— Validator fired and warned about missing vocab —');
-const airportWarn = warnings.find(w => /At the Airport/.test(w));
-check('validator warned about At the Airport missing vocab', !!airportWarn,
-  airportWarn ? `(${airportWarn})` : '(no matching warning captured)');
+console.log('\n— Validator: no missing-vocab warnings after S7 wiring —');
+// Session 7: every {token} in every story now has a VOCABULARY entry, so
+// the validator's missingByStory path should be silent for all four new
+// stories. (Doctor + Kitchen were already clean.)
+const airportWarn    = warnings.find(w => /At the Airport/.test(w));
 const restaurantWarn = warnings.find(w => /Restaurant Dinner/.test(w));
-check('validator warned about The Restaurant Dinner missing vocab', !!restaurantWarn);
+const classroomWarn  = warnings.find(w => /Classroom Group Project/.test(w));
+const phoneWarn      = warnings.find(w => /Automated Phone Barrier/.test(w));
+check('validator no longer warns about At the Airport',
+  !airportWarn, airportWarn ? `still warning: ${airportWarn}` : '');
+check('validator no longer warns about The Restaurant Dinner',
+  !restaurantWarn, restaurantWarn ? `still warning: ${restaurantWarn}` : '');
+check('validator no longer warns about The Classroom Group Project',
+  !classroomWarn, classroomWarn ? `still warning: ${classroomWarn}` : '');
+check('validator no longer warns about The Automated Phone Barrier',
+  !phoneWarn, phoneWarn ? `still warning: ${phoneWarn}` : '');
 
 console.log('');
 if (fails.length) {

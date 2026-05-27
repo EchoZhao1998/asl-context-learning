@@ -97,14 +97,59 @@ const VOCABULARY = {
   'lips':        { word: 'lips',      fingerspellOnly: true },
   'sentences':   { word: 'sentences', fingerspellOnly: true },
 
-  // ── Airport / Restaurant / Classroom / Phone stories ──
-  // (Session 6 — placeholder coverage. None of these are in
-  //  wlasl-urls.js yet. They are intentionally left OUT of VOCABULARY
-  //  so the dev-only validator in app.js can list them as the next
-  //  vocab-extension batch. To wire one up:
-  //    1. Add an entry above with `{ word: '<gloss>' }`.
-  //    2. Add the gloss to VOCAB_WORDS in scripts/build-lookup.js.
-  //    3. Run `node scripts/build-lookup.js`.
-  //  Until then, those words still appear in the prose — they just
-  //  render as `.no-sign` and the validator warns once at boot.)
+  // ── Airport story (Session 7) ──
+  // WLASL-covered. (`phone` is already defined above under Doctor.)
+  'ticket':      { word: 'ticket'      },
+  'people':      { word: 'people'      },
+  'walk':        { word: 'walk'        },
+  'write':       { word: 'write'       },
+  // Fingerspell-only. Institutional travel vocabulary is mostly outside
+  // WLASL — fingerspelling is the honest answer, and the deaf-traveler
+  // experience genuinely involves a lot of letter-by-letter signage.
+  'airport':     { word: 'airport',  fingerspellOnly: true },
+  'bag':         { word: 'bag',      fingerspellOnly: true },
+  'passport':    { word: 'passport', fingerspellOnly: true },
+  'screen':      { word: 'screen',   fingerspellOnly: true },
+  'look':        { word: 'look',     fingerspellOnly: true },
+  'gate':        { word: 'gate',     fingerspellOnly: true },
+  'seat':        { word: 'seat',     fingerspellOnly: true },
+  'plane':       { word: 'plane',    fingerspellOnly: true },
+
+  // ── Restaurant story (Session 7) ──
+  // WLASL-covered. (`table`, `hungry`, `food`, `water`, `phone`, `eat`
+  // already defined above.)
+  'restaurant':  { word: 'restaurant'  },
+  'family':      { word: 'family'      },
+  'chicken':     { word: 'chicken'     },
+  'order':       { word: 'order'       },
+  // Fingerspell-only.
+  'menu':        { word: 'menu',     fingerspellOnly: true },
+  'rice':        { word: 'rice',     fingerspellOnly: true },
+
+  // ── Classroom story (Session 7) ──
+  // WLASL-covered. (`table` from Kitchen and `write` from Airport reused.)
+  'class':       { word: 'class'       },
+  'teacher':     { word: 'teacher'     },
+  'group':       { word: 'group'       },
+  'project':     { word: 'project'     },
+  'computer':    { word: 'computer'    },
+  'paper':       { word: 'paper'       },
+  'question':    { word: 'question'    },
+  'help':        { word: 'help'        },
+  'read':        { word: 'read'        },
+  // Fingerspell-only. Plurals — singulars `student` / `book` are likely
+  // in WLASL; left as plural to match the narration. Swap to singular
+  // forms if you'd rather have video here.
+  'students':    { word: 'students', fingerspellOnly: true },
+  'books':       { word: 'books',    fingerspellOnly: true },
+
+  // ── Phone story (Session 7) ──
+  // WLASL-covered. (`phone`, `computer`, `call` already defined above.)
+  'problem':     { word: 'problem'     },
+  'bank':        { word: 'bank'        },
+  'number':      { word: 'number'      },
+  'time':        { word: 'time'        },
+  'person':      { word: 'person'      },
+  // Fingerspell-only. Plural; singular `question` is covered above.
+  'questions':   { word: 'questions', fingerspellOnly: true },
 };

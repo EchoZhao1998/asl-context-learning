@@ -17,7 +17,7 @@ An interactive web app for **late-deafened adult ESL learners** to learn ASL sig
 
 ---
 
-## Current state (as of 2026-05-27 — Session 6 data refactor done, six scenarios wired)
+## Current state (as of 2026-05-27 — Session 7 vocab wiring done, all 6 stories fully clickable)
 
 Repo is clean. Session 4's three build tasks are done and committed:
 
@@ -216,7 +216,48 @@ ChatGPT (`Portofilo/chatGPT0527.md`) flagged the drift between `stories.md` (6 s
 
 ---
 
-## ▶ Next chat — Scenario series + flat-image refactor (Session 7)
+## Session 7 — Vocab + WLASL wiring for the 4 new stories (2026-05-27)
+
+Echo picked the "wire vocab + WLASL" chunk from the carried-forward list. Pure data work, no architectural decisions touched — bridges the gap between Session 6's data refactor and the still-open scene-art question.
+
+### What got built
+- **35 new `VOCABULARY` entries** in `data/vocabulary.js`, grouped + commented by story (Airport / Restaurant / Classroom / Phone). Split: **22 WLASL-covered** + **13 `fingerspellOnly: true`**.
+- **22 new `VOCAB_WORDS`** appended to `scripts/build-lookup.js`, sectioned per story.
+- **`wlasl-urls.js` regenerated** — now 76 total words, ~51 KB (was 14 words / ~9 KB pre-Session-5, then ~36 KB after Doctor). Every new gloss resolved to 4–18 direct mp4 URLs.
+
+### Per-story coverage (from `node scripts/lint-story.js`)
+
+| Story | Coverable (WLASL video) | Fingerspell-only |
+|---|---|---|
+| Airport (13) | ticket, people, walk, write, phone | airport, bag, passport, screen, look, gate, seat, plane |
+| Restaurant (12) | table, restaurant, family, hungry, food, chicken, water, order, phone, eat | menu, rice |
+| Classroom (13) | class, teacher, group, project, table, computer, paper, write, question, help, read | students, books |
+| Phone (9) | problem, bank, phone, number, computer, call, time, person | questions |
+
+Some words appear in multiple coverage lists (e.g. `phone`, `table`, `write`) — they're already-defined entries from prior stories, reused. Net new words across the four stories: **35** (22 covered + 13 fingerspell-only).
+
+### Decisions made (so they don't get re-litigated)
+- **Plurals kept as fingerspell-only.** `questions` / `students` / `books` are plural; the singulars (`question` / `student` / `book`) are likely in WLASL. We left them as plural to match the authored narration rather than silently rewrite Echo's voice. Swap to singular forms later if you'd prefer video over fingerspell here — it's a one-line change in each narration.
+- **Institutional travel vocab as fingerspell-only.** `airport`, `gate`, `passport`, `seat`, `plane`, `bag`, `screen`, `look` are all not in WLASL. Accepted as fingerspell-only — this is itself an honest signal of the deaf-traveler experience (institutional signage is largely fingerspelled in practice), and it stress-tests the strip on a scenario where it carries more of the load.
+- **No story rewrites.** The narrations from Session 6 stand as-is. The only changes this session were under `data/vocabulary.js` and `scripts/build-lookup.js` + the regenerated `wlasl-urls.js`. `data/stories.js`, `app.js`, `style.css`, `index.html` untouched.
+
+### Verification
+`node scripts/test-doctor-story.js` — extended with **15 new assertions**, all 70+ pass:
+- Airport: `airport` flipped from `.no-sign` → `.has-sign` (was the explicit "no vocab yet" test in S6). `walk` is `.has-sign`.
+- Airport: click `walk` (covered) → word-title `WALK`, no "not in WLASL" fallback. Click `airport` (fingerspell-only) → 7 fingerspell tiles + "not in WLASL" note.
+- Restaurant / Classroom / Phone: one covered word + one fingerspell-only word each verified `.has-sign`.
+- **Validator assertions flipped**: previously asserted that warnings fired for the 4 new stories; now asserts the four warnings are **absent** (all `{token}` words have VOCABULARY entries).
+
+### Carried forward / still open
+- **Scene art for the 4 new stories.** Untouched this session — still the next session's question. See §"Next chat" below.
+- **Sentence-initial words** (`Soon`, `Because`, `She`, `I`, `This`): still not clickable. `soon` continues to surface as an orphan VOCABULARY entry in the validator info line.
+- **`ASL.webp` copyright** still unresolved — swap before public deploy.
+- **Long-run scene-art approach** (3+ stories beyond kitchen + clinic) — still open, still wants peer/professor input.
+- **Handshape images** `a.png … z.png` still absent.
+
+---
+
+## ▶ Next chat — Scenario series + flat-image refactor (Session 8)
 
 Discrete chunk. Hand to a fresh chat with this HANDOVER + `git log --oneline -10` + the inputs below.
 
@@ -249,7 +290,7 @@ Discrete chunk. Hand to a fresh chat with this HANDOVER + `git log --oneline -10
 
 ## Vocabulary & stories
 
-**Vocabulary (57 words across two stories):**
+**Vocabulary (92 entries across six stories — 76 WLASL-covered + 16 fingerspell-only).** Count by source story; words shared across stories aren't double-counted.
 
 Kitchen story (14 words):
 - Scene (clickable in the SVG): `apple`, `chair`, `cup`, `glass`, `knife`, `table`
@@ -262,11 +303,35 @@ Doctor story (43 new words):
 
 \* The differentiation moment vs. VL2-style apps: *"the kind doctor pulls down her **mask** so I can see her **lips**. She writes **sentences** on a notepad."*
 
+Airport story (12 new words — no `sceneBuilder` yet):
+- WLASL-covered: `ticket`, `people`, `walk`, `write`
+- Fingerspell-only: `airport`, `bag`, `passport`, `screen`, `look`, `gate`, `seat`, `plane`
+- Reused: `phone`
+
+Restaurant story (6 new words — no `sceneBuilder` yet):
+- WLASL-covered: `restaurant`, `family`, `chicken`, `order`
+- Fingerspell-only: `menu`, `rice`
+- Reused: `table`, `hungry`, `food`, `water`, `phone`, `eat`
+
+Classroom story (11 new words — no `sceneBuilder` yet):
+- WLASL-covered: `class`, `teacher`, `group`, `project`, `computer`, `paper`, `question`, `help`, `read`
+- Fingerspell-only: `students`, `books`
+- Reused: `table`, `write`
+
+Phone story (6 new words — no `sceneBuilder` yet):
+- WLASL-covered: `problem`, `bank`, `number`, `time`, `person`
+- Fingerspell-only: `questions`
+- Reused: `phone`, `computer`, `call`
+
 **Stories:**
 1. "A Morning in the Kitchen" — 5 sentences. `sceneBuilder: 'kitchen'`.
 2. "At the Doctor" — 11 sentences. `sceneBuilder: 'clinic'`.
+3. "At the Airport" — 9 sentences. No `sceneBuilder` (narration full-width).
+4. "The Restaurant Dinner" — 7 sentences. No `sceneBuilder`.
+5. "The Classroom Group Project" — 7 sentences. No `sceneBuilder`.
+6. "The Automated Phone Barrier" — 6 sentences. No `sceneBuilder`.
 
-**How video loading works:** `tryVideoUrls(word)` walks through `WLASL_URLS[word]` silently, skipping CORS/404 failures until one plays. A note is shown only on total failure.
+**How video loading works:** `tryVideoUrls(word)` walks through `WLASL_URLS[word]` silently, skipping CORS/404 failures until one plays. A note is shown only on total failure. For `fingerspellOnly: true` entries, `WLASL_URLS` has no key — the note shows "not in WLASL dataset" immediately and the fingerspell strip carries the lesson.
 
 ---
 
@@ -299,12 +364,15 @@ Doctor story (43 new words):
 - [x] Session 4 follow-up — revert to SVG scene, 60/40 layout, alphabet modal (done 2026-05-26)
 - [x] Surface `cup` in the scene + story (done in revert)
 - [x] Second story: "At the Doctor" + clinic scene + story switcher (done 2026-05-26)
+- [x] Session 6 — data refactor + 4 new story drafts wired data-only (done 2026-05-27)
+- [x] Session 7 — vocab + WLASL wiring for Airport / Restaurant / Classroom / Phone (done 2026-05-27)
 - [ ] Swap `ASL.webp` for a CC/public-domain chart (or render our own) — required before public deploy
 - [ ] Add handshape images `a.png … z.png` to `assets/fingerspell/` — upgrades the per-letter strip to real handshapes
-- [ ] Third story (kicks the scene-art scaling question). Workflow: draft narration → `node scripts/lint-story.js draft.txt` → add to `vocabularyMap` + `stories` array + `VOCAB_WORDS` → run `build-lookup.js` → **write a new SVG `sceneBuilders` entry**.
+- [ ] Scene art for the 4 new stories — flat-image + hotspot grid (Gemini5 proposal) vs hand-built SVG vs hybrid. Open question, queued for Session 8.
 - [ ] Long-run scene-art approach (3+ stories) — ask peers/professors
+- [ ] Sentence-initial clickability (`Soon`, `Because`, …) — one-line fix in `parseStory` (lowercase before lookup)
 - [ ] GitHub Pages deployment
-- [ ] Test video playback across all 54 WLASL-covered words; note persistent failures
+- [ ] Test video playback across all 76 WLASL-covered words; note persistent failures
 - [ ] Add a loading spinner while video tries sources
 
 ### Phase 2 — Smart fallback for unknown words
