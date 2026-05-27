@@ -84,7 +84,11 @@
     <span>ASL signs from <a href="https://www.kaggle.com/datasets/risangbaskoro/wlasl-processed" target="_blank">WLASL dataset</a> · Context words from <a href="https://www.datamuse.com/api/" target="_blank">Datamuse API</a></span>
   </footer>
 
+  <!-- Load order matters: data globals must exist before app.js runs. -->
   <script src="wlasl-urls.js"></script>
+  <script src="data/vocabulary.js"></script>
+  <script src="data/scenes.js"></script>
+  <script src="data/stories.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

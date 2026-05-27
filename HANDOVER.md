@@ -17,7 +17,7 @@ An interactive web app for **late-deafened adult ESL learners** to learn ASL sig
 
 ---
 
-## Current state (as of 2026-05-27 — "At the Doctor" built, Gemini collab plan locked, scenario series next)
+## Current state (as of 2026-05-27 — Session 6 data refactor done, six scenarios wired)
 
 Repo is clean. Session 4's three build tasks are done and committed:
 
@@ -37,7 +37,10 @@ ac4f7eb Docs: close out Session 4 in HANDOVER (tasks 1-3 done)
 |---|---|---|
 | `index.html` | Single-screen layout: interactive SVG scene + story (left), info/video/fingerspell panel (right); alphabet modal | ✅ Done |
 | `style.css` | Swiss-minimal, 2-column grid, scene 60% / story 40% vertical split, fingerspell tiles, × dismiss, modal | ✅ Done |
-| `app.js` | vocabularyMap, stories (with `sceneBuilder` key), `sceneBuilders` map, click handler, fingerspell, modal, video | ✅ Done |
+| `app.js` | Logic only after Session 6: DOM wiring, render, click handler, fingerspell, modal, video, dev-only validator. Reads VOCABULARY / STORIES / SCENE_BUILDERS as globals. | ✅ Done |
+| `data/vocabulary.js` | VOCABULARY global — clickable-word registry (was inline `vocabularyMap` in app.js). | ✅ Done |
+| `data/scenes.js` | SCENE_BUILDERS global — one inline-SVG builder per scene (kitchen + clinic). | ✅ Done |
+| `data/stories.js` | STORIES global — all 6 narrations with extended schema (`category`, `difficulty`, `targetWords`). | ✅ Done |
 | `assets/image/ASL.png` | ASL manual alphabet chart for the modal (375×500, WebP-in-PNG). ⚠ Has visible copyright watermark — see deployment note. | ⚠ Present |
 | `assets/image/home-kitchen.png` | Old Gemini backdrop. **Unused** after revert — kept in repo so we can re-evaluate later. Safe to delete. | ⚠ Unused |
 | `wlasl-urls.js` | Auto-generated URL lookup, 14 words, ~9KB | ✅ Done |
@@ -161,7 +164,59 @@ Also flagged in the proposal:
 
 ---
 
-## ▶ Next chat — Scenario series + flat-image refactor (Session 6)
+## Session 6 — Data refactor + six scenarios wired (2026-05-27)
+
+ChatGPT (`Portofilo/chatGPT0527.md`) flagged the drift between `stories.md` (6 scenarios) and `app.js` (2). This session was the architecture-first response to that gap: split data from logic, add a validator, wire all six stories — defer the scene-art question to a later session.
+
+### What got built
+- **File split.** The three big literals (`vocabularyMap`, `stories`, `sceneBuilders`) moved out of `app.js` into a new `data/` folder. `app.js` is now logic only (~250 lines vs ~620 before) and reads each as a global. Script-tag loading order in `index.html`: `wlasl-urls.js` → `data/vocabulary.js` → `data/scenes.js` → `data/stories.js` → `app.js`. No frameworks, no ES modules, no bundler. File:// preview still works.
+- **Extended story schema.** Each story now carries `category` (home / health / travel / food / education / communication), `difficulty` (all `beginner` for now — placeholder slot for a future learning-path UI), and `targetWords` (the "vocabulary cluster" per the HANDOVER tone rule). For Doctor and the four new scenarios, `targetWords` = the bold-marked words from `stories.md`. For Kitchen (no bold source), the scene-interactive vocab doubles as the cluster.
+- **Four new stories wired data-only.** Airport / Restaurant / Classroom / Phone are now in `STORIES`. Their narrations come from `stories.md`; each bolded word is `{token}`-wrapped so it renders as a clickable span. **No scene builders yet** — `renderScene()` gracefully hides the banner when `story.sceneBuilder` is absent, so the narration occupies the full left column. Their vocab is intentionally NOT in VOCABULARY — see validator below.
+- **Dev-only validator.** New `validateStoryWords()` runs at boot, scans every `{token}` in every story, and console-warns about words missing from VOCABULARY, grouped by story. Also lists orphan VOCABULARY entries that no story uses. Gated to `localhost` / `127.0.0.1` / `file:` so GitHub Pages visitors don't see it. Output on first load:
+  ```
+  At the Airport: airport, bag, passport, ticket, people, screen, look, gate, walk, write, seat, plane
+  The Restaurant Dinner: restaurant, family, menu, rice, chicken, order
+  The Classroom Group Project: class, students, teacher, group, project, computer, paper, books, write, question, help, read
+  The Automated Phone Barrier: problem, bank, number, computer, time, questions, person
+  1 VOCABULARY entry is unused by any story: soon
+  ```
+  The "soon" orphan is the Session 5 sentence-initial-clickability gap (`Soon, the {nurse}…` — capital S, lowercase vocab key) — validator surfaces it correctly. Carried as-is; not in scope for this session.
+
+### What was preserved (explicit, per chatGPT0527.md constraints)
+- Clickable words (story-word spans + interactive-object SVG groups, single shared `handleWordClick`)
+- WLASL video fallback chain (`tryVideoUrls`)
+- Fingerspell fallback (strip + alphabet modal)
+- Story selector (`<select>` with all 6 options)
+- Accessibility attributes (`role="button"`, `tabindex="0"`, `aria-label`, modal `aria-modal` + focus)
+- UI: no redesign
+- Styling: no `style.css` changes
+- No frameworks, no bundler
+
+### Verification
+`node scripts/test-doctor-story.js` updated to cover the refactor — 50+ assertions, all pass:
+- VOCABULARY / SCENE_BUILDERS / STORIES globals all present, STORIES has 6 entries
+- Selector populated with all 6 stories in correct order
+- Kitchen + clinic still render with their 6 interactive objects each
+- Doctor differentiation words (`mask`, `lips`, `sentences`) still clickable + `.has-sign`
+- Click flow (scene object + fingerspell-only story word) still wires correctly
+- **New:** switching to Airport (no `sceneBuilder`) hides the scene banner and still renders clickable prose — confirms the graceful-fallback path
+- **New:** the validator fires and warns about the four new scenarios' missing vocab — confirms the warning loop is wired
+
+### Carried forward / still open
+- **Vocab + WLASL coverage for the 4 new stories.** Currently the bolded words render as `.no-sign` (clickable spans without underline / sign video). To wire one up: (1) add an entry to `data/vocabulary.js`, (2) add the gloss to `VOCAB_WORDS` in `scripts/build-lookup.js`, (3) re-run it. Lint each new scenario first with `node scripts/lint-story.js stories.md` to find what WLASL actually covers vs what falls to fingerspell-only.
+- **Scene art for the 4 new stories.** Open — same question as before (hand-built SVG, flat-image + hotspot grid per Gemini5, or hybrid). The data-only render is a deliberate "good enough for now" so the next session can focus on this one question without also fighting the data split.
+- **Sentence-initial words** (`Soon`, `Because`, `She`, `I`, `This`): still not clickable for the same case-sensitivity reason as before. The validator now surfaces this as an orphan. Fix is one line in `parseStory` (lowercase before lookup); deferred.
+- **`ASL.webp` copyright** still unresolved — swap before public deploy.
+
+### Decisions made this session (so they don't get re-litigated)
+- **Module style:** plain script tags + globals (not ES modules). Reasons: preserves file:// preview, the jsdom test already used `window.eval`, aligns with the "no frameworks" rule. ES modules would have required a local HTTP server for preview and a more invasive test rework.
+- **Scope for the 4 new scenarios:** data-only this session. Their vocab and scenes are explicitly deferred so the architecture work landed cleanly without bundling in a vocab-expansion task that needs `WLASL_v0.3.json` and your judgment on each word.
+- **`targetWords` source:** the bolded words in `stories.md` verbatim. Honest signal of authorial intent rather than my guess at a "lesson cluster."
+- **Validator scope:** local-dev-only console warnings. Considered failing loudly in the UI but rejected — silent in production, loud in dev is the right loop. No new dependencies.
+
+---
+
+## ▶ Next chat — Scenario series + flat-image refactor (Session 7)
 
 Discrete chunk. Hand to a fresh chat with this HANDOVER + `git log --oneline -10` + the inputs below.
 
@@ -293,10 +348,17 @@ If a clicked word is NOT in WLASL, trigger a fingerspelling engine (CSS cross-fa
 
 ```
 asl-context-learning/
-├── index.html              ← layout + alphabet modal + story-selector mount point
+├── index.html              ← layout + alphabet modal + story-selector mount point.
+│                              Loads wlasl-urls.js → data/*.js → app.js in that order.
 ├── style.css               ← all styling (incl. .story-selector)
-├── app.js                  ← all logic (vocabularyMap, stories, sceneBuilders {kitchen, clinic},
-│                              story switcher, fingerspell, modal, video)
+├── app.js                  ← LOGIC ONLY (post Session 6): DOM wiring, render, click handler,
+│                              fingerspell, modal, video, dev-only validator.
+│                              Reads VOCABULARY / STORIES / SCENE_BUILDERS as globals.
+├── data/
+│   ├── vocabulary.js       ← VOCABULARY global — clickable-word registry.
+│   ├── scenes.js           ← SCENE_BUILDERS global — inline-SVG builders (kitchen, clinic).
+│   └── stories.js          ← STORIES global — 6 narrations + extended schema
+│                              (category, difficulty, targetWords, sentences).
 ├── wlasl-urls.js           ← AUTO-GENERATED — run build-lookup.js, do not edit
 ├── WLASL_v0.3.json         ← local only, gitignored, never push to GitHub
 ├── stories.md              ← author-first draft scratchpad (lint with scripts/lint-story.js)
@@ -310,7 +372,9 @@ asl-context-learning/
 └── scripts/
     ├── build-lookup.js     ← run after adding new words
     ├── lint-story.js       ← run on a draft to see WLASL coverage (author-first)
-    └── test-doctor-story.js ← jsdom verification (run `node scripts/test-doctor-story.js`)
+    └── test-doctor-story.js ← jsdom verification (run `node scripts/test-doctor-story.js`).
+                                Updated in Session 6: concatenates the data files before
+                                eval'ing so cross-script `const` bindings resolve.
 ```
 
 ---
